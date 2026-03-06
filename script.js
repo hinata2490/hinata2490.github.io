@@ -15,7 +15,7 @@ if (contactForm) {
 const workLinks = document.querySelectorAll(".card-link");
 
 workLinks.forEach((link) => {
-  // href="#" はダミーリンク。実URLに差し替えると通常リンクとして動きます。
+  // href="#" はダミー。実URLを入れると通常遷移になります。
   if (link.getAttribute("href") === "#") {
     link.addEventListener("click", (event) => {
       event.preventDefault();

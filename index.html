@@ -7,23 +7,25 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="paper-grain"></div>
+    <div class="paper-grain" aria-hidden="true"></div>
 
     <header class="hero" id="top">
+      <div class="hero-overlay" aria-hidden="true"></div>
       <div class="container hero-inner">
         <p class="tag">Portfolio</p>
         <h1>棚橋広翔</h1>
         <p class="subtitle">動画編集・デザイン・AI活用</p>
         <p class="lead">
-          和の美意識と現代的な見せ方を掛け合わせ、印象に残る映像・デザイン制作を行います。
+          映像とデザインの美しさに、戦略とAI活用の再現性を掛け合わせ、
+          伝わるだけでなく「印象に残る」表現をご提供します。
         </p>
-        <nav class="hero-nav">
+        <nav class="hero-nav" aria-label="ページ内ナビゲーション">
           <a href="#about">自己紹介</a>
           <a href="#video-works">動画制作実績</a>
           <a href="#design-works">デザイン実績</a>
           <a href="#contact">お問い合わせ</a>
         </nav>
-        <a class="cta" href="#contact">ご相談はこちら</a>
+        <a class="cta" href="#contact">制作のご相談はこちら</a>
       </div>
     </header>
 
@@ -32,9 +34,10 @@
         <div class="container">
           <h2>自己紹介</h2>
           <p>
-            はじめまして、棚橋広翔です。動画編集・デザインを軸に、
-            AIツールを活用した効率的かつ高品質な制作をご提案しています。
-            丁寧なヒアリングを通じて、伝えたい価値がしっかり届くクリエイティブを目指します。
+            はじめまして、棚橋広翔です。動画編集・デザインを中心に、
+            AIを活用した制作フローで、品質とスピードの両立を目指しています。
+            丁寧なヒアリングから構成・編集まで一貫して対応し、
+            ブランドやサービスの価値が伝わるアウトプットを大切にしています。
           </p>
         </div>
       </section>
@@ -43,62 +46,66 @@
         <div class="container">
           <h2>できること</h2>
           <ul class="skills-list">
-            <li>動画編集（構成・カット・テロップ・BGM調整・演出）</li>
-            <li>サムネイル、バナー、SNS投稿画像などのデザイン制作</li>
-            <li>AI活用による企画補助・素材整理・制作フロー最適化</li>
+            <li>動画編集（企画整理 / カット / テロップ / BGM・効果音 / 演出調整）</li>
+            <li>デザイン制作（サムネイル / バナー / SNS投稿画像 / KV）</li>
+            <li>AI活用（リサーチ補助 / 構成案作成 / 制作効率化）</li>
           </ul>
         </div>
       </section>
 
-      <section class="section" id="video-works">
+      <section class="section works-section" id="video-works">
         <div class="container">
           <h2>動画制作実績</h2>
-          <p class="section-note">※下記はダミーです。各「詳細を見る」のリンク先を後から実URLに差し替えできます。</p>
+          <p class="section-note">
+            ※現在はダミーリンクです。各カードの「詳細を見る」の `href` を実URLに差し替えるだけで公開できます。
+          </p>
           <div class="cards-grid">
             <article class="work-card">
               <div class="thumb" aria-hidden="true">Thumbnail</div>
-              <h3>企業紹介ムービー</h3>
-              <p>ブランドの世界観を意識した、上品でテンポの良い紹介映像。</p>
-              <a class="card-link" href="#" data-url-type="video">詳細を見る</a>
+              <h3>企業紹介映像</h3>
+              <p>信頼感と温度感を両立し、ブランドの背景まで伝える構成に設計。</p>
+              <a class="card-link" href="#" data-placeholder-url="video-work-01">詳細を見る</a>
             </article>
             <article class="work-card">
               <div class="thumb" aria-hidden="true">Thumbnail</div>
-              <h3>SNSショート動画</h3>
-              <p>冒頭3秒の引きを強化し、最後まで視聴される構成に調整。</p>
-              <a class="card-link" href="#" data-url-type="video">詳細を見る</a>
+              <h3>採用向けコンセプトムービー</h3>
+              <p>空気感の演出とテンポ設計で、働く魅力が伝わる映像表現に。</p>
+              <a class="card-link" href="#" data-placeholder-url="video-work-02">詳細を見る</a>
             </article>
             <article class="work-card">
               <div class="thumb" aria-hidden="true">Thumbnail</div>
-              <h3>商品プロモーション映像</h3>
-              <p>訴求ポイントを整理し、わかりやすく魅力を伝える編集。</p>
-              <a class="card-link" href="#" data-url-type="video">詳細を見る</a>
+              <h3>SNS短尺プロモーション</h3>
+              <p>冒頭で惹きつける導線を重視し、視聴完了率を意識した編集。</p>
+              <a class="card-link" href="#" data-placeholder-url="video-work-03">詳細を見る</a>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="section" id="design-works">
+      <section class="section works-section" id="design-works">
         <div class="container">
           <h2>デザイン実績</h2>
-          <p class="section-note">※下記はダミーです。各「詳細を見る」のリンク先を後から実URLに差し替えできます。</p>
+          <p class="section-note">
+            ※現在はダミーリンクです。各カードの「詳細を見る」の `href` を実URLに差し替えるだけで公開できます。
+          </p>
           <div class="cards-grid">
             <article class="work-card">
               <div class="thumb" aria-hidden="true">Thumbnail</div>
               <h3>YouTubeサムネイル</h3>
-              <p>一目で内容が伝わる文字設計と、視線を集める配色設計。</p>
-              <a class="card-link" href="#" data-url-type="design">詳細を見る</a>
+              <p>内容の要点を瞬時に伝える文字設計と、視認性を重視した配色。</p>
+              <a class="card-link" href="#" data-placeholder-url="design-work-01">詳細を見る</a>
             </article>
             <article class="work-card">
               <div class="thumb" aria-hidden="true">Thumbnail</div>
-              <h3>SNS告知バナー</h3>
-              <p>情報の優先順位を整理した、読みやすく信頼感のあるレイアウト。</p>
-              <a class="card-link" href="#" data-url-type="design">詳細を見る</a>
+              <h3>イベント告知バナー</h3>
+              <p>優先情報を整理し、上品さと訴求力を両立したレイアウトに。</p>
+              <a class="card-link" href="#" data-placeholder-url="design-work-02">詳細を見る</a>
             </article>
             <article class="work-card">
               <div class="thumb" aria-hidden="true">Thumbnail</div>
               <h3>LPキービジュアル</h3>
-              <p>サービス価値を象徴するモチーフで、第一印象を強く設計。</p>
-              <a class="card-link" href="#" data-url-type="design">詳細を見る</a>
+              <p>サービスの世界観を第一印象で伝える、象徴性の高いビジュアル。</p>
+              <a class="card-link" href="#" data-placeholder-url="design-work-03">詳細を見る</a>
             </article>
           </div>
         </div>
@@ -110,15 +117,15 @@
           <div class="sns-links">
             <a href="#" class="sns-card" aria-label="X">
               <span class="sns-name">X</span>
-              <span class="sns-desc">最新の制作情報を発信</span>
+              <span class="sns-desc">制作ノウハウ・最新情報</span>
             </a>
             <a href="#" class="sns-card" aria-label="Instagram">
               <span class="sns-name">Instagram</span>
-              <span class="sns-desc">デザイン事例を掲載</span>
+              <span class="sns-desc">デザインのビジュアル事例</span>
             </a>
             <a href="#" class="sns-card" aria-label="YouTube">
               <span class="sns-name">YouTube</span>
-              <span class="sns-desc">動画作品を公開</span>
+              <span class="sns-desc">動画制作の実績アーカイブ</span>
             </a>
           </div>
         </div>
