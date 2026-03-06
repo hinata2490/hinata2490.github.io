@@ -1,0 +1,325 @@
+:root {
+  --kinari: #f7f2e8;
+  --white: #fffdf9;
+  --sumi: #1d1a17;
+  --sumi-soft: #4f4942;
+  --line: #d8ccba;
+  --accent: #8a1f34;
+  --gold: #9a7b3f;
+  --shadow: 0 14px 35px rgba(29, 26, 23, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Hiragino Kaku Gothic ProN", "Yu Gothic", serif;
+  color: var(--sumi);
+  line-height: 1.9;
+  background:
+    radial-gradient(circle at 20% -10%, rgba(154, 123, 63, 0.08), transparent 38%),
+    radial-gradient(circle at 90% 20%, rgba(138, 31, 52, 0.08), transparent 35%),
+    var(--kinari);
+}
+
+.paper-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.25;
+  background-image: linear-gradient(transparent 96%, rgba(29, 26, 23, 0.03) 100%);
+  background-size: 100% 5px;
+}
+
+.container {
+  width: min(1100px, 92%);
+  margin: 0 auto;
+}
+
+.hero {
+  padding: 88px 0 68px;
+  background: linear-gradient(145deg, rgba(255, 253, 249, 0.97), rgba(247, 242, 232, 0.94));
+  border-bottom: 1px solid var(--line);
+}
+
+.hero-inner {
+  position: relative;
+  padding: 34px;
+  background: var(--white);
+  border: 1px solid rgba(154, 123, 63, 0.4);
+  box-shadow: var(--shadow);
+}
+
+.hero-inner::before,
+.hero-inner::after {
+  content: "";
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border-color: var(--gold);
+  border-style: solid;
+  opacity: 0.7;
+}
+
+.hero-inner::before {
+  top: 14px;
+  left: 14px;
+  border-width: 2px 0 0 2px;
+}
+
+.hero-inner::after {
+  right: 14px;
+  bottom: 14px;
+  border-width: 0 2px 2px 0;
+}
+
+.tag {
+  margin: 0;
+  color: var(--sumi-soft);
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 8px 0 6px;
+  font-size: clamp(2.2rem, 5.2vw, 3.4rem);
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--sumi-soft);
+}
+
+.lead {
+  max-width: 700px;
+  margin: 14px 0 0;
+}
+
+.hero-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.hero-nav a {
+  text-decoration: none;
+  color: var(--sumi);
+  border: 1px solid rgba(154, 123, 63, 0.55);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 22px;
+  padding: 12px 24px;
+  border: 1px solid var(--accent);
+  background: linear-gradient(140deg, #9f233c, #7e1c31);
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(138, 31, 52, 0.25);
+}
+
+.section {
+  padding: 72px 0;
+  border-bottom: 1px solid rgba(154, 123, 63, 0.35);
+}
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 1.7rem;
+  letter-spacing: 0.03em;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 72px;
+  height: 2px;
+  background: linear-gradient(to right, var(--accent), transparent);
+}
+
+.skills-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.section-note {
+  margin: 0 0 22px;
+  color: var(--sumi-soft);
+  font-size: 0.92rem;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.work-card {
+  display: grid;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid rgba(154, 123, 63, 0.45);
+  padding: 16px;
+  box-shadow: 0 10px 20px rgba(29, 26, 23, 0.07);
+}
+
+.thumb {
+  min-height: 140px;
+  border: 1px dashed rgba(138, 31, 52, 0.55);
+  background:
+    linear-gradient(45deg, rgba(154, 123, 63, 0.08), rgba(138, 31, 52, 0.08));
+  display: grid;
+  place-items: center;
+  color: var(--sumi-soft);
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+}
+
+h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.work-card p {
+  margin: 0;
+  color: var(--sumi-soft);
+  font-size: 0.95rem;
+}
+
+.card-link {
+  justify-self: start;
+  text-decoration: none;
+  color: var(--accent);
+  border: 1px solid rgba(138, 31, 52, 0.6);
+  padding: 7px 13px;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.card-link:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.sns-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sns-card {
+  text-decoration: none;
+  color: var(--sumi);
+  background: var(--white);
+  border: 1px solid rgba(154, 123, 63, 0.45);
+  padding: 18px;
+  display: grid;
+  gap: 4px;
+  box-shadow: 0 8px 18px rgba(29, 26, 23, 0.06);
+}
+
+.sns-card:hover {
+  border-color: var(--accent);
+}
+
+.sns-name {
+  font-size: 1.05rem;
+  color: var(--accent);
+}
+
+.sns-desc {
+  font-size: 0.9rem;
+  color: var(--sumi-soft);
+}
+
+.contact-note {
+  margin-top: 0;
+  color: var(--sumi-soft);
+  font-size: 0.94rem;
+}
+
+.contact-form {
+  display: grid;
+  gap: 14px;
+  max-width: 700px;
+  padding: 20px;
+  background: var(--white);
+  border: 1px solid rgba(154, 123, 63, 0.45);
+  box-shadow: 0 10px 20px rgba(29, 26, 23, 0.06);
+}
+
+.contact-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  border: 1px solid #c9baa6;
+  background: #fffefc;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--sumi);
+}
+
+.contact-form button {
+  width: fit-content;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 20px;
+  font: inherit;
+  cursor: pointer;
+}
+
+footer {
+  padding: 28px 0 38px;
+  color: var(--sumi-soft);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .cards-grid,
+  .sns-links {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding: 64px 0 52px;
+  }
+
+  .hero-inner {
+    padding: 24px;
+  }
+
+  .section {
+    padding: 56px 0;
+  }
+}
