@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>棚橋広翔 | Portfolio</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="hero" id="top">
+      <div class="container">
+        <p class="tag">Portfolio</p>
+        <h1>棚橋広翔</h1>
+        <p class="subtitle">動画編集・デザイン・AI活用</p>
+        <a class="cta" href="#contact">お問い合わせへ</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="about">
+        <div class="container">
+          <h2>自己紹介</h2>
+          <p>
+            はじめまして、棚橋広翔です。動画編集やデザインを中心に、
+            AIツールを活用しながら、伝わるクリエイティブ制作に取り組んでいます。
+            シンプルで見やすく、目的に合わせた表現を大切にしています。
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="skills">
+        <div class="container">
+          <h2>できること</h2>
+          <ul class="skills-list">
+            <li>動画編集（カット・テロップ・BGM・効果音）</li>
+            <li>サムネイル・バナーなどのデザイン制作</li>
+            <li>AIを活用した企画補助・制作効率化</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section" id="sns">
+        <div class="container">
+          <h2>SNSリンク</h2>
+          <div class="sns-links">
+            <a href="#" aria-label="X">X</a>
+            <a href="#" aria-label="Instagram">Instagram</a>
+            <a href="#" aria-label="YouTube">YouTube</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="contact">
+        <div class="container">
+          <h2>お問い合わせ</h2>
+          <p class="contact-note">※こちらは見た目のみのフォームです。</p>
+          <form class="contact-form" action="#" method="post">
+            <label>
+              お名前
+              <input type="text" name="name" placeholder="お名前を入力" />
+            </label>
+            <label>
+              メールアドレス
+              <input type="email" name="email" placeholder="example@mail.com" />
+            </label>
+            <label>
+              お問い合わせ内容
+              <textarea name="message" rows="5" placeholder="お問い合わせ内容をご記入ください"></textarea>
+            </label>
+            <button type="submit">送信</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>© <span id="year"></span> 棚橋広翔</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
