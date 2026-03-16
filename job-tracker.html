@@ -280,6 +280,17 @@
       background: #fefcbf; padding: 2px 6px;
       border-radius: 4px; margin-left: 6px;
     }
+    .import-table tr.junk-row td { opacity: 0.7; }
+    .junk-badge {
+      font-size: 0.7rem; color: #975a16;
+      background: #fefcbf; padding: 2px 6px;
+      border-radius: 4px; margin-left: 6px;
+    }
+    .gmail-open-link {
+      color: #4299e1; text-decoration: none;
+      margin-left: 6px; font-size: 0.85rem; white-space: nowrap;
+    }
+    .gmail-open-link:hover { color: #2b6cb0; text-decoration: underline; }
     .import-table input[type="text"] {
       border: 1.5px solid #e2e8f0; border-radius: 6px;
       padding: 5px 8px; font-size: 0.82rem;
@@ -629,7 +640,9 @@
 // =============================================
 const STORAGE_KEY   = 'job-tracker-v1';
 const CLIENT_ID_KEY = 'job-tracker-gmail-client-id';
+const LAST_SCAN_KEY = 'job-tracker-last-scan';
 const TRACKER_URL   = 'https://hinata2490.github.io/job-tracker.html';
+const STATUS_RANK   = { '書類選考': 0, '一次面接': 1, '二次面接': 2, '最終面接': 3, '結果待ち': 4, '内定': 5, '不合格': -1 };
 
 let entries = [];
 let currentFilter = 'all';
@@ -637,6 +650,7 @@ let activePopoverEntryId = null;
 let accessToken = null;
 let tokenClient = null;
 let importCandidates = [];
+let autoScanTimer = null;
 
 // =============================================
 // Data
@@ -694,8 +708,19 @@ function initTokenClient(clientId) {
       }
       accessToken = resp.access_token;
       await scanGmail();
+      // 55分後に自動再スキャン（トークン有効期限1時間の直前）
+      scheduleAutoScan(55 * 60 * 1000);
     },
   });
+}
+
+function scheduleAutoScan(delayMs = 55 * 60 * 1000) {
+  if (autoScanTimer) clearTimeout(autoScanTimer);
+  autoScanTimer = setTimeout(() => {
+    if (!tokenClient) return;
+    setGmailStatus('自動スキャン中…', 'loading');
+    tokenClient.requestAccessToken({ prompt: '' });
+  }, delayMs);
 }
 
 function connectGmail() {
@@ -730,17 +755,31 @@ async function scanGmail() {
     setGmailStatus(`${authEmail} でスキャン中…`, 'loading');
   } catch (e) { /* ignore */ }
 
-  const query = '(from:indeed.com OR from:indeedapply.com OR from:green.co.jp OR from:doda.jp OR from:mynavi.jp OR from:rikunabi.com) newer_than:180d';
-  const listUrl =
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=50`;
+  // 初回は30日以内、2回目以降は前回スキャン以降のみ
+  const lastScanTime = localStorage.getItem(LAST_SCAN_KEY);
+  let dateFilter;
+  if (lastScanTime) {
+    const d = new Date(lastScanTime);
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth() + 1).padStart(2, '0');
+    const dd   = String(d.getDate()).padStart(2, '0');
+    dateFilter = `after:${yyyy}/${mm}/${dd}`;
+  } else {
+    dateFilter = 'newer_than:30d';
+  }
+
+  const query = `(from:indeed.com OR from:indeedapply.com OR from:green.co.jp OR from:doda.jp OR from:mynavi.jp OR from:rikunabi.com) ${dateFilter}`;
+  const listUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=50`;
 
   try {
     const listRes  = await gmailFetch(listUrl);
     const messages = listRes.messages || [];
 
     if (messages.length === 0) {
-      setGmailStatus(`メールが見つかりませんでした（スキャン対象: ${authEmail}）`, 'error');
-      showToast('Green/Indeedからのメールは見つかりませんでした', 'info');
+      const lastMsg = lastScanTime ? `（前回: ${fmtRelTime(lastScanTime)}）` : '';
+      setGmailStatus(`新しいメールはありませんでした ${lastMsg}（${authEmail}）`, 'connected');
+      showToast('新しいメールはありませんでした', 'info');
+      localStorage.setItem(LAST_SCAN_KEY, new Date().toISOString());
       document.getElementById('btn-gmail').disabled = false;
       return;
     }
@@ -751,24 +790,34 @@ async function scanGmail() {
     for (const msg of slice) {
       const url =
         `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}` +
-        `?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`;
+        `?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date` +
+        `&fields=id,snippet,payload`;
       const detail  = await gmailFetch(url);
       const headers = detail.payload?.headers || [];
       const get     = (n) => headers.find(h => h.name === n)?.value || '';
-      const entry   = parseEmail(get('Subject'), get('From'), get('Date'), msg.id);
+      const entry   = parseEmail(get('Subject'), get('From'), get('Date'), msg.id, detail.snippet || '');
       if (entry) found.push(entry);
     }
 
-    // Deduplicate by company+status
+    // 既存エントリのステータスを自動更新
+    const autoUpdated = autoUpdateExistingEntries(found);
+
+    // 企業+ステータスで重複除去
     const unique = found.filter((a, i) =>
       found.findIndex(b => b.company === a.company && b.status === a.status) === i
     );
 
+    // スキャン時刻を保存
+    localStorage.setItem(LAST_SCAN_KEY, new Date().toISOString());
+
     importCandidates = unique;
     renderImportPreview();
 
-    setGmailStatus(`${unique.length} 件検出 (${authEmail})`, 'connected');
-    showToast(`${unique.length} 件の応募候補が見つかりました`, 'success');
+    const junkCount = unique.filter(c => c.junk).length;
+    const goodCount = unique.length - junkCount;
+    const autoMsg   = autoUpdated > 0 ? ` / ${autoUpdated} 件を自動更新` : '';
+    setGmailStatus(`${unique.length} 件検出（要確認: ${goodCount} / 不要: ${junkCount}）（${authEmail}）`, 'connected');
+    showToast(`${goodCount} 件の応募候補${autoMsg}`, 'success');
 
   } catch (err) {
     setGmailStatus(`エラー: ${err.message}（アカウント: ${authEmail}）`, 'error');
@@ -787,9 +836,38 @@ async function gmailFetch(url) {
 }
 
 // =============================================
+// Auto-update existing entries from email scan
+// =============================================
+function autoUpdateExistingEntries(found) {
+  // 企業ごとに最も進んだステータスを選ぶ
+  const bestByCompany = {};
+  for (const f of found) {
+    if (f.company === '（企業名を確認してください）') continue;
+    const rank = STATUS_RANK[f.status] ?? 0;
+    if (!(f.company in bestByCompany) || rank > (STATUS_RANK[bestByCompany[f.company]] ?? 0)) {
+      bestByCompany[f.company] = f.status;
+    }
+  }
+
+  let updated = 0;
+  for (const e of entries) {
+    const newStatus = bestByCompany[e.company];
+    if (!newStatus) continue;
+    if ((STATUS_RANK[newStatus] ?? 0) > (STATUS_RANK[e.status] ?? 0)) {
+      const oldStatus = e.status;
+      e.status = newStatus;
+      updated++;
+      showToast(`${e.company}: ${oldStatus} → ${newStatus}`, 'info');
+    }
+  }
+  if (updated > 0) { saveData(); render(); }
+  return updated;
+}
+
+// =============================================
 // Email Parsing
 // =============================================
-function parseEmail(subject, from, dateStr, msgId) {
+function parseEmail(subject, from, dateStr, msgId, snippet = '') {
   // Detect site
   let site = 'その他';
   if (/green\.co\.jp/i.test(from))   site = 'Green';
@@ -839,27 +917,37 @@ function parseEmail(subject, from, dateStr, msgId) {
 
   if (!company || company.length < 2) company = '（企業名を確認してください）';
 
-  const status = detectStatus(subject);
+  const status = detectStatus(subject, snippet);
+  const junk   = isJunkEmail(subject, snippet, company);
+
+  // ニュースレター系は完全スキップ
+  if (/メールマガジン|まとめ|特集/.test(subject) && junk) return null;
 
   // Parse date
   let date = '';
   try { date = new Date(dateStr).toISOString().slice(0, 10); }
   catch { date = new Date().toISOString().slice(0, 10); }
 
-  // Skip pure "newsletter" style emails
-  if (/メールマガジン|まとめ|特集|新着求人/.test(subject)) return null;
-
-  return { company, site, date, status, subject, msgId };
+  return { company, site, date, status, subject, snippet, msgId, junk };
 }
 
-function detectStatus(subject) {
-  if (/内定|採用.*決定|合格.*最終|内々定/.test(subject))       return '内定';
-  if (/不合格|見送り|残念ながら|選考.*終了|ご縁がなかった/.test(subject)) return '不合格';
-  if (/最終面接/.test(subject))                               return '最終面接';
-  if (/[二２]次面接/.test(subject))                           return '二次面接';
-  if (/[一１]次面接|面接.*ご案内|面接.*日程|面接.*調整/.test(subject)) return '一次面接';
-  if (/書類.*通過|書類.*合格|書類.*結果.*通過|選考.*通過/.test(subject)) return '一次面接';
-  if (/結果待ち|合否.*連絡|合否.*お待ち/.test(subject))        return '結果待ち';
+function isJunkEmail(subject, snippet, company) {
+  if (/オススメ求人|新着求人のお知らせ|あなたにオススメ|スカウト.*\d+件|\d+件のスカウト|メールマガジン|まとめ|特集/.test(subject)) return true;
+  if (/オススメ求人|新着求人|あなたへのおすすめ求人/.test(snippet)) return true;
+  if (company === '（企業名を確認してください）') return true;
+  if (/^(マーケティング部|営業部|開発部|総務部|人事部|採用担当|エンジニア|デザイナー)$/.test(company)) return true;
+  return false;
+}
+
+function detectStatus(subject, snippet = '') {
+  const text = subject + ' ' + snippet;
+  if (/内定|採用.*決定|合格.*最終|内々定/.test(text))       return '内定';
+  if (/不合格|見送り|残念ながら|選考.*終了|ご縁がなかった/.test(text)) return '不合格';
+  if (/最終面接/.test(text))                               return '最終面接';
+  if (/[二２]次面接/.test(text))                           return '二次面接';
+  if (/[一１]次面接|面接.*ご案内|面接.*日程|面接.*調整/.test(text)) return '一次面接';
+  if (/書類.*通過|書類.*合格|書類.*結果.*通過|選考.*通過/.test(text)) return '一次面接';
+  if (/結果待ち|合否.*連絡|合否.*お待ち/.test(text))        return '結果待ち';
   return '書類選考';
 }
 
@@ -877,15 +965,21 @@ function renderImportPreview() {
     const statusOptions = ['書類選考','一次面接','二次面接','最終面接','結果待ち','内定','不合格']
       .map(s => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`)
       .join('');
-    const siteCls = c.site === 'Green' ? 'site-green' : c.site === 'Indeed' ? 'site-indeed' : 'site-other';
+    const siteCls  = c.site === 'Green' ? 'site-green' : c.site === 'Indeed' ? 'site-indeed' : 'site-other';
+    const gmailUrl = `https://mail.google.com/mail/u/0/#all/${c.msgId}`;
+    const checked  = !c.junk;
 
     return `
-      <tr class="${isDup ? 'duplicate' : ''}" id="import-row-${i}">
-        <td><input type="checkbox" class="import-check" data-idx="${i}" checked /></td>
+      <tr class="${isDup ? 'duplicate' : ''} ${c.junk ? 'junk-row' : ''}" id="import-row-${i}">
+        <td><input type="checkbox" class="import-check" data-idx="${i}" ${checked ? 'checked' : ''} /></td>
         <td>
           <input type="text" value="${esc(c.company)}" data-field="company" data-idx="${i}" />
           ${isDup ? '<span class="dup-badge">重複の可能性</span>' : ''}
-          <div class="import-subject" title="${esc(c.subject)}">${esc(c.subject)}</div>
+          ${c.junk ? '<span class="junk-badge">不要な可能性</span>' : ''}
+          <div class="import-subject" title="${esc(c.subject)}">
+            ${esc(c.subject)}
+            <a href="${gmailUrl}" target="_blank" class="gmail-open-link" title="Gmailで開く">✉</a>
+          </div>
         </td>
         <td><span class="site-badge ${siteCls}">${esc(c.site)}</span></td>
         <td><span class="date-text">${fmtDate(c.date)}</span></td>
@@ -1084,6 +1178,13 @@ function fmtDate(d) {
   const [y,m,day] = d.split('-');
   return `${y}/${m}/${day}`;
 }
+function fmtRelTime(isoStr) {
+  const diffMin = Math.floor((Date.now() - new Date(isoStr)) / 60000);
+  if (diffMin < 1)    return 'たった今';
+  if (diffMin < 60)   return `${diffMin}分前`;
+  if (diffMin < 1440) return `${Math.floor(diffMin / 60)}時間前`;
+  return `${Math.floor(diffMin / 1440)}日前`;
+}
 
 function setGmailStatus(msg, type) {
   const el = document.getElementById('gmail-status');
@@ -1166,6 +1267,12 @@ loadData();
 render();
 buildBookmarklet();
 readUrlParams();
+
+// 前回スキャン時刻を表示
+const _lastScan = localStorage.getItem(LAST_SCAN_KEY);
+if (_lastScan) {
+  setGmailStatus(`前回スキャン: ${fmtRelTime(_lastScan)}（クリックして更新）`, 'connected');
+}
 
 // Enter key: only Shift+Enter submits
 document.getElementById('inp-company').addEventListener('keydown', e => {
