@@ -1,84 +1,681 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>棚橋広翔 | Portfolio</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <header class="hero" id="top">
-      <div class="container">
-        <p class="tag">Portfolio</p>
-        <h1>棚橋広翔</h1>
-        <p class="subtitle">動画編集・デザイン・AI活用</p>
-        <a class="cta" href="#contact">お問い合わせへ</a>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hinata2490 / Projects</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+    }
+
+    /* ===== Header ===== */
+    header {
+      border-bottom: 1px solid #21262d;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: #0d1117;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4299e1, #9f7aea);
+      display: flex;
+      align-items: center;
+      justify-content: font-size;
+      font-size: 1.1rem;
+      overflow: hidden;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .header-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #e6edf3;
+    }
+
+    .header-title span {
+      color: #8b949e;
+      font-weight: 400;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-refresh {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-refresh:hover { background: #30363d; }
+    .btn-refresh.loading { opacity: 0.6; pointer-events: none; }
+
+    .repo-count {
+      font-size: 0.8rem;
+      color: #8b949e;
+      background: #21262d;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    /* ===== Main ===== */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    /* ===== Search & Filter ===== */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8b949e;
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px 12px 8px 34px;
+      color: #e6edf3;
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input::placeholder { color: #8b949e; }
+    .search-input:focus { border-color: #58a6ff; }
+
+    .filter-select {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px 14px;
+      color: #e6edf3;
+      font-size: 0.82rem;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* ===== Cards Grid ===== */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 10px;
+      padding: 20px;
+      transition: border-color 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card:hover { border-color: #388bfd40; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #58a6ff;
+      word-break: break-all;
+    }
+
+    .card-private {
+      font-size: 0.7rem;
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      padding: 2px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .card-desc {
+      font-size: 0.84rem;
+      color: #8b949e;
+      line-height: 1.5;
+      min-height: 20px;
+    }
+    .card-desc.empty { color: #484f58; font-style: italic; }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.78rem;
+      color: #8b949e;
+    }
+
+    .meta-lang {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .lang-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #f1e05a;
+      flex-shrink: 0;
+    }
+    .lang-dot.html   { background: #e34c26; }
+    .lang-dot.css    { background: #563d7c; }
+    .lang-dot.js     { background: #f1e05a; }
+    .lang-dot.ts     { background: #2b7489; }
+    .lang-dot.python { background: #3572A5; }
+    .lang-dot.other  { background: #8b949e; }
+
+    /* Pages badge */
+    .pages-badge {
+      font-size: 0.72rem;
+      background: #1a3a1a;
+      border: 1px solid #238636;
+      color: #3fb950;
+      padding: 2px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+
+    /* Card actions */
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-site {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #238636;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: background 0.15s;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-site:hover { background: #2ea043; }
+
+    .btn-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: transparent;
+      color: #8b949e;
+      text-decoration: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      border: 1px solid #30363d;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-github:hover { border-color: #8b949e; color: #e6edf3; }
+
+    /* Note */
+    .card-note {
+      border-top: 1px solid #21262d;
+      padding-top: 12px;
+    }
+
+    .note-display {
+      font-size: 0.8rem;
+      color: #8b949e;
+      cursor: pointer;
+      min-height: 20px;
+      line-height: 1.5;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .note-display:hover { background: #21262d; }
+    .note-display:empty::before {
+      content: '✏ メモを追加…';
+      color: #484f58;
+    }
+
+    .note-input {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #388bfd;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.8rem;
+      font-family: inherit;
+      color: #e6edf3;
+      resize: none;
+      outline: none;
+      min-height: 60px;
+    }
+
+    /* ===== States ===== */
+    .loading-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: #8b949e;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #21262d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8b949e;
+    }
+    .error-state .error-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .error-state p { font-size: 0.88rem; line-height: 1.6; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8b949e;
+      font-size: 0.88rem;
+    }
+
+    /* ===== Toast ===== */
+    .toast-wrap {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+    }
+    .toast {
+      background: #238636;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      animation: toastIn 0.2s ease;
+    }
+    @keyframes toastIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    @media (max-width: 640px) {
+      .cards { grid-template-columns: 1fr; }
+      header { padding: 16px 20px; }
+      main { padding: 20px 16px; }
+      .toolbar { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="avatar">
+      <img src="https://github.com/hinata2490.png" alt="avatar" onerror="this.style.display='none'">
+    </div>
+    <div class="header-title">hinata2490 <span>/ Projects</span></div>
+  </div>
+  <div class="header-right">
+    <span class="repo-count" id="repo-count">読み込み中…</span>
+    <button class="btn-refresh" id="btn-refresh" onclick="loadRepos(true)">
+      🔄 更新
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search"
+        type="text" placeholder="リポジトリを検索…" oninput="renderCards()" />
+    </div>
+    <select class="filter-select" id="filter" onchange="renderCards()">
+      <option value="all">すべて</option>
+      <option value="pages">公開サイトあり</option>
+      <option value="source">コードのみ</option>
+    </select>
+  </div>
+
+  <div id="content">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>GitHubからリポジトリを取得中…</p>
+    </div>
+  </div>
+</main>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const USERNAME    = 'hinata2490';
+const NOTES_KEY   = 'gh-projects-notes';
+const CACHE_KEY   = 'gh-projects-cache';
+const CACHE_TTL   = 5 * 60 * 1000; // 5 minutes
+
+let repos = [];
+let notes = {};
+
+// =====================
+// Notes
+// =====================
+function loadNotes() {
+  try { notes = JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; }
+  catch { notes = {}; }
+}
+function saveNotes() {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+
+// =====================
+// GitHub API
+// =====================
+async function loadRepos(forceRefresh = false) {
+  const btn = document.getElementById('btn-refresh');
+  btn.classList.add('loading');
+  btn.textContent = '⏳ 取得中…';
+
+  // Check cache
+  if (!forceRefresh) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+      if (cached && Date.now() - cached.ts < CACHE_TTL) {
+        repos = cached.data;
+        renderCards();
+        btn.classList.remove('loading');
+        btn.innerHTML = '🔄 更新';
+        return;
+      }
+    } catch {}
+  }
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/users/${USERNAME}/repos?sort=updated&per_page=100`,
+      { headers: { Accept: 'application/vnd.github.v3+json' } }
+    );
+
+    if (res.status === 403) {
+      throw new Error('APIレート制限に達しました。1時間後に再試行してください。');
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    repos = await res.json();
+
+    // Cache
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: repos }));
+    renderCards();
+    showToast('最新情報に更新しました');
+
+  } catch (err) {
+    showError(err.message);
+  }
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '🔄 更新';
+}
+
+// =====================
+// Pages URL
+// =====================
+function getPagesUrl(repo) {
+  if (!repo.has_pages) return null;
+  if (repo.name === `${USERNAME}.github.io`) {
+    return `https://${USERNAME}.github.io/`;
+  }
+  return `https://${USERNAME}.github.io/${repo.name}/`;
+}
+
+// Known file-level pages (stored manually)
+function getKnownUrls(repo) {
+  const known = {
+    'hinata2490.github.io': [
+      { label: '就活進捗管理', url: `https://${USERNAME}.github.io/job-tracker.html` },
+      { label: 'ポートフォリオ', url: `https://${USERNAME}.github.io/portfolio.html` },
+    ]
+  };
+  return known[repo.name] || [];
+}
+
+// =====================
+// Language color
+// =====================
+function langCls(lang) {
+  if (!lang) return 'other';
+  const l = lang.toLowerCase();
+  if (l === 'html') return 'html';
+  if (l === 'css') return 'css';
+  if (l === 'javascript') return 'js';
+  if (l === 'typescript') return 'ts';
+  if (l === 'python') return 'python';
+  return 'other';
+}
+
+// =====================
+// Render
+// =====================
+function renderCards() {
+  const query  = document.getElementById('search').value.toLowerCase();
+  const filter = document.getElementById('filter').value;
+
+  let filtered = repos.filter(r => {
+    const matchSearch =
+      r.name.toLowerCase().includes(query) ||
+      (r.description || '').toLowerCase().includes(query);
+
+    const pagesUrl = getPagesUrl(r);
+    const knownUrls = getKnownUrls(r);
+    const hasSite = !!pagesUrl || knownUrls.length > 0;
+
+    if (filter === 'pages')  return matchSearch && hasSite;
+    if (filter === 'source') return matchSearch && !hasSite;
+    return matchSearch;
+  });
+
+  document.getElementById('repo-count').textContent =
+    `${filtered.length} / ${repos.length} リポジトリ`;
+
+  if (filtered.length === 0) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty-state">条件に一致するリポジトリがありません</div>`;
+    return;
+  }
+
+  document.getElementById('content').innerHTML =
+    `<div class="cards">${filtered.map(r => cardHTML(r)).join('')}</div>`;
+
+  // Bind note events
+  document.querySelectorAll('.note-display').forEach(el => {
+    el.addEventListener('click', () => startEditNote(el));
+  });
+}
+
+function cardHTML(repo) {
+  const pagesUrl   = getPagesUrl(repo);
+  const knownUrls  = getKnownUrls(repo);
+  const note       = notes[repo.name] || '';
+  const updatedAt  = new Date(repo.updated_at);
+  const updatedStr = `${updatedAt.getFullYear()}/${String(updatedAt.getMonth()+1).padStart(2,'0')}/${String(updatedAt.getDate()).padStart(2,'0')}`;
+
+  const siteButtons = [];
+  if (pagesUrl) {
+    siteButtons.push(
+      `<a class="btn-site" href="${pagesUrl}" target="_blank">🌐 サイトを開く</a>`
+    );
+  }
+  knownUrls.forEach(ku => {
+    siteButtons.push(
+      `<a class="btn-site" href="${ku.url}" target="_blank">🌐 ${esc(ku.label)}</a>`
+    );
+  });
+
+  return `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">${esc(repo.name)}</div>
+        ${repo.private ? '<span class="card-private">🔒 Private</span>' : ''}
+        ${(pagesUrl || knownUrls.length > 0) ? '<span class="pages-badge">● 公開中</span>' : ''}
       </div>
-    </header>
 
-    <main>
-      <section class="section" id="about">
-        <div class="container">
-          <h2>自己紹介</h2>
-          <p>
-            はじめまして、棚橋広翔です。動画編集やデザインを中心に、
-            AIツールを活用しながら、伝わるクリエイティブ制作に取り組んでいます。
-            シンプルで見やすく、目的に合わせた表現を大切にしています。
-          </p>
-        </div>
-      </section>
-
-      <section class="section" id="skills">
-        <div class="container">
-          <h2>できること</h2>
-          <ul class="skills-list">
-            <li>動画編集（カット・テロップ・BGM・効果音）</li>
-            <li>サムネイル・バナーなどのデザイン制作</li>
-            <li>AIを活用した企画補助・制作効率化</li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="section" id="sns">
-        <div class="container">
-          <h2>SNSリンク</h2>
-          <div class="sns-links">
-            <a href="#" aria-label="X">X</a>
-            <a href="#" aria-label="Instagram">Instagram</a>
-            <a href="#" aria-label="YouTube">YouTube</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="contact">
-        <div class="container">
-          <h2>お問い合わせ</h2>
-          <p class="contact-note">※こちらは見た目のみのフォームです。</p>
-          <form class="contact-form" action="#" method="post">
-            <label>
-              お名前
-              <input type="text" name="name" placeholder="お名前を入力" />
-            </label>
-            <label>
-              メールアドレス
-              <input type="email" name="email" placeholder="example@mail.com" />
-            </label>
-            <label>
-              お問い合わせ内容
-              <textarea name="message" rows="5" placeholder="お問い合わせ内容をご記入ください"></textarea>
-            </label>
-            <button type="submit">送信</button>
-          </form>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="container">
-        <p>© <span id="year"></span> 棚橋広翔</p>
+      <div class="card-desc ${repo.description ? '' : 'empty'}">
+        ${repo.description ? esc(repo.description) : '説明なし'}
       </div>
-    </footer>
 
-    <script src="script.js"></script>
-  </body>
+      <div class="card-meta">
+        ${repo.language ? `
+          <span class="meta-lang">
+            <span class="lang-dot ${langCls(repo.language)}"></span>
+            ${esc(repo.language)}
+          </span>` : ''}
+        <span>🕐 ${updatedStr}</span>
+        ${repo.stargazers_count > 0 ? `<span>⭐ ${repo.stargazers_count}</span>` : ''}
+      </div>
+
+      <div class="card-actions">
+        ${siteButtons.join('')}
+        <a class="btn-github" href="${repo.html_url}" target="_blank">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          コードを見る
+        </a>
+      </div>
+
+      <div class="card-note">
+        <div class="note-display" data-repo="${esc(repo.name)}">${esc(note)}</div>
+      </div>
+    </div>`;
+}
+
+// =====================
+// Note Editing
+// =====================
+function startEditNote(el) {
+  const repoName = el.dataset.repo;
+  const ta = document.createElement('textarea');
+  ta.className   = 'note-input';
+  ta.value       = notes[repoName] || '';
+  ta.placeholder = 'メモを入力… （Ctrl+Enterで保存、Escでキャンセル）';
+  el.replaceWith(ta);
+  ta.focus();
+
+  const save = () => {
+    notes[repoName] = ta.value.trim();
+    saveNotes();
+    renderCards();
+  };
+  ta.addEventListener('blur', save);
+  ta.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) ta.blur();
+    if (ev.key === 'Escape') { ta.removeEventListener('blur', save); renderCards(); }
+  });
+}
+
+// =====================
+// Error / Toast
+// =====================
+function showError(msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <p>データの取得に失敗しました。<br>${esc(msg)}<br><br>
+      <button class="btn-refresh" onclick="loadRepos(true)" style="margin:0 auto">再試行</button></p>
+    </div>`;
+  document.getElementById('repo-count').textContent = 'エラー';
+}
+
+function showToast(msg) {
+  const wrap = document.getElementById('toast-wrap');
+  const el   = document.createElement('div');
+  el.className   = 'toast';
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =====================
+// Init
+// =====================
+loadNotes();
+loadRepos();
+</script>
+</body>
 </html>
