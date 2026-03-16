@@ -722,7 +722,13 @@ async function scanGmail() {
   setGmailStatus('メールをスキャン中…', 'loading');
   document.getElementById('btn-gmail').disabled = true;
 
-  const query = 'from:(green.co.jp indeed.com doda.jp mynavi.jp rikunabi.com) newer_than:6m';
+  // Confirm which account is authenticated
+  try {
+    const profile = await gmailFetch('https://gmail.googleapis.com/gmail/v1/users/me/profile');
+    setGmailStatus(`${profile.emailAddress} でスキャン中…`, 'loading');
+  } catch (e) { /* ignore */ }
+
+  const query = '(from:indeed.com OR from:indeedapply.com OR from:green.co.jp OR from:doda.jp OR from:mynavi.jp OR from:rikunabi.com) newer_than:180d';
   const listUrl =
     `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=50`;
 
@@ -731,7 +737,7 @@ async function scanGmail() {
     const messages = listRes.messages || [];
 
     if (messages.length === 0) {
-      setGmailStatus('該当するメールが見つかりませんでした', 'error');
+      setGmailStatus('該当するメールが見つかりませんでした（indeedapply@indeed.com等からのメールを確認してください）', 'error');
       showToast('Green/Indeedからのメールは見つかりませんでした', 'info');
       document.getElementById('btn-gmail').disabled = false;
       return;
