@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>就活進捗管理</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: #f0f4f8;
+      color: #2d3748;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #2b6cb0, #4299e1);
+      color: white;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    header .subtitle {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+    }
+
+    .stat-box {
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 8px 16px;
+      text-align: center;
+      min-width: 60px;
+    }
+
+    .stat-box .num {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .stat-box .label {
+      font-size: 0.7rem;
+      opacity: 0.9;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 20px;
+    }
+
+    /* Add Form */
+    .add-section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .add-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #2b6cb0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-group input,
+    .form-group select {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #2d3748;
+      background: white;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
+    }
+
+    .btn-add {
+      background: linear-gradient(135deg, #2b6cb0, #4299e1);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 24px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-add:active { transform: translateY(0); }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-bar span {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #718096;
+    }
+
+    .filter-btn {
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+      color: #4a5568;
+    }
+
+    .filter-btn:hover { border-color: #4299e1; color: #2b6cb0; }
+    .filter-btn.active { background: #2b6cb0; color: white; border-color: #2b6cb0; }
+
+    /* Table */
+    .table-wrapper {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .table-header-bar {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-header-bar h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    .entry-count {
+      font-size: 0.8rem;
+      color: #a0aec0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      background: #f7fafc;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #f0f4f8;
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover { background: #f7fafc; }
+    tbody tr:last-child { border-bottom: none; }
+
+    td {
+      padding: 14px 16px;
+      font-size: 0.88rem;
+      vertical-align: top;
+    }
+
+    .company-name {
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    /* Site Badge */
+    .site-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .site-green {
+      background: #c6f6d5;
+      color: #276749;
+    }
+
+    .site-indeed {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+
+    .site-other {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .status-badge:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    .status-badge:active { transform: scale(0.97); }
+
+    .s-書類選考  { background: #ebf8ff; color: #2c5282; border: 1.5px solid #bee3f8; }
+    .s-一次面接  { background: #fefcbf; color: #744210; border: 1.5px solid #faf089; }
+    .s-二次面接  { background: #feebc8; color: #7b341e; border: 1.5px solid #fbd38d; }
+    .s-最終面接  { background: #fed7e2; color: #702459; border: 1.5px solid #feb2c6; }
+    .s-結果待ち  { background: #e9d8fd; color: #553c9a; border: 1.5px solid #d6bcfa; }
+    .s-内定      { background: #c6f6d5; color: #276749; border: 1.5px solid #9ae6b4; }
+    .s-不合格    { background: #f0f4f8; color: #a0aec0; border: 1.5px solid #e2e8f0; }
+
+    /* Notes */
+    .note-cell {
+      max-width: 220px;
+    }
+
+    .note-text {
+      font-size: 0.82rem;
+      color: #718096;
+      cursor: pointer;
+      min-height: 22px;
+      line-height: 1.4;
+    }
+
+    .note-text:empty::before {
+      content: 'クリックしてメモを追加…';
+      color: #cbd5e0;
+      font-style: italic;
+    }
+
+    .note-input {
+      width: 100%;
+      border: 1.5px solid #4299e1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      color: #2d3748;
+      resize: none;
+      outline: none;
+      min-height: 60px;
+      background: white;
+    }
+
+    /* Date */
+    .date-text {
+      color: #718096;
+      font-size: 0.82rem;
+    }
+
+    /* Delete */
+    .btn-delete {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #cbd5e0;
+      font-size: 1rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .btn-delete:hover { color: #fc8181; background: #fff5f5; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #a0aec0;
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* Status picker popover */
+    .status-popover {
+      position: fixed;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      padding: 8px;
+      z-index: 1000;
+      display: none;
+      min-width: 140px;
+    }
+
+    .status-popover.open { display: block; }
+
+    .status-option {
+      padding: 7px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: background 0.1s;
+    }
+
+    .status-option:hover { filter: brightness(0.95); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stats { display: none; }
+
+      header { padding: 16px 20px; }
+
+      td, th { padding: 10px 12px; }
+
+      .note-cell { max-width: 130px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📋 就活進捗管理</h1>
+    <div class="subtitle">Job Application Tracker</div>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<main>
+  <!-- Add Form -->
+  <div class="add-section">
+    <h2>＋ 新規追加</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>企業名</label>
+        <input type="text" id="inp-company" placeholder="例：株式会社〇〇" />
+      </div>
+      <div class="form-group">
+        <label>求人サイト</label>
+        <select id="inp-site">
+          <option value="Green">Green</option>
+          <option value="Indeed">Indeed</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>応募日</label>
+        <input type="date" id="inp-date" />
+      </div>
+      <div class="form-group">
+        <label>初期ステータス</label>
+        <select id="inp-status">
+          <option value="書類選考">書類選考</option>
+          <option value="一次面接">一次面接</option>
+          <option value="二次面接">二次面接</option>
+          <option value="最終面接">最終面接</option>
+          <option value="結果待ち">結果待ち</option>
+          <option value="内定">内定</option>
+          <option value="不合格">不合格</option>
+        </select>
+      </div>
+      <button class="btn-add" onclick="addEntry()">追加</button>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar">
+    <span>絞り込み：</span>
+    <button class="filter-btn active" onclick="setFilter('all', this)">すべて</button>
+    <button class="filter-btn" onclick="setFilter('書類選考', this)">書類選考</button>
+    <button class="filter-btn" onclick="setFilter('一次面接', this)">一次面接</button>
+    <button class="filter-btn" onclick="setFilter('二次面接', this)">二次面接</button>
+    <button class="filter-btn" onclick="setFilter('最終面接', this)">最終面接</button>
+    <button class="filter-btn" onclick="setFilter('結果待ち', this)">結果待ち</button>
+    <button class="filter-btn" onclick="setFilter('内定', this)">内定</button>
+    <button class="filter-btn" onclick="setFilter('不合格', this)">不合格</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper">
+    <div class="table-header-bar">
+      <h2>応募企業一覧</h2>
+      <span class="entry-count" id="entry-count"></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>企業名</th>
+          <th>求人サイト</th>
+          <th>応募日</th>
+          <th>ステータス</th>
+          <th>備考</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div id="empty-state" class="empty-state" style="display:none">
+      <div class="icon">📂</div>
+      <p>まだ応募企業がありません。<br>上のフォームから追加してください。</p>
+    </div>
+  </div>
+</main>
+
+<!-- Status Popover -->
+<div class="status-popover" id="status-popover">
+  <div class="status-option s-書類選考" onclick="selectStatus('書類選考')">書類選考</div>
+  <div class="status-option s-一次面接" onclick="selectStatus('一次面接')">一次面接</div>
+  <div class="status-option s-二次面接" onclick="selectStatus('二次面接')">二次面接</div>
+  <div class="status-option s-最終面接" onclick="selectStatus('最終面接')">最終面接</div>
+  <div class="status-option s-結果待ち" onclick="selectStatus('結果待ち')">結果待ち</div>
+  <div class="status-option s-内定"     onclick="selectStatus('内定')">内定</div>
+  <div class="status-option s-不合格"   onclick="selectStatus('不合格')">不合格</div>
+</div>
+
+<script>
+  const STATUSES = ['書類選考','一次面接','二次面接','最終面接','結果待ち','内定','不合格'];
+  const STORAGE_KEY = 'job-tracker-v1';
+
+  let entries = [];
+  let currentFilter = 'all';
+  let activePopoverEntryId = null;
+
+  // --- Data ---
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      entries = raw ? JSON.parse(raw) : [];
+    } catch { entries = []; }
+  }
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  function genId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+  }
+
+  // --- UI ---
+  function addEntry() {
+    const company = document.getElementById('inp-company').value.trim();
+    if (!company) {
+      document.getElementById('inp-company').focus();
+      return;
+    }
+    const site   = document.getElementById('inp-site').value;
+    const date   = document.getElementById('inp-date').value;
+    const status = document.getElementById('inp-status').value;
+
+    entries.unshift({ id: genId(), company, site, date, status, note: '' });
+    saveData();
+    document.getElementById('inp-company').value = '';
+    render();
+  }
+
+  function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    saveData();
+    render();
+  }
+
+  function setFilter(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function render() {
+    const filtered = currentFilter === 'all'
+      ? entries
+      : entries.filter(e => e.status === currentFilter);
+
+    const tbody = document.getElementById('table-body');
+    const empty = document.getElementById('empty-state');
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      tbody.innerHTML = filtered.map(e => `
+        <tr data-id="${e.id}">
+          <td><span class="company-name">${esc(e.company)}</span></td>
+          <td><span class="site-badge ${siteCls(e.site)}">${esc(e.site)}</span></td>
+          <td><span class="date-text">${fmtDate(e.date)}</span></td>
+          <td>
+            <span class="status-badge s-${e.status}" onclick="openStatusPicker(event, '${e.id}')">
+              ${esc(e.status)} ▾
+            </span>
+          </td>
+          <td class="note-cell">
+            <div class="note-text" onclick="startEditNote(event, '${e.id}')">${esc(e.note)}</div>
+          </td>
+          <td>
+            <button class="btn-delete" onclick="deleteEntry('${e.id}')" title="削除">✕</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Stats
+    const total   = entries.length;
+    const active  = entries.filter(e => !['内定','不合格'].includes(e.status)).length;
+    const offer   = entries.filter(e => e.status === '内定').length;
+    const ng      = entries.filter(e => e.status === '不合格').length;
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-box"><div class="num">${total}</div><div class="label">応募</div></div>
+      <div class="stat-box"><div class="num">${active}</div><div class="label">進行中</div></div>
+      <div class="stat-box"><div class="num">${offer}</div><div class="label">内定</div></div>
+      <div class="stat-box"><div class="num">${ng}</div><div class="label">不合格</div></div>
+    `;
+    document.getElementById('entry-count').textContent =
+      filtered.length + ' 件' + (currentFilter !== 'all' ? `（全${total}件）` : '');
+  }
+
+  // --- Status Popover ---
+  function openStatusPicker(event, id) {
+    event.stopPropagation();
+    activePopoverEntryId = id;
+    const pop = document.getElementById('status-popover');
+    pop.classList.add('open');
+    const rect = event.target.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY + 4;
+    let left = rect.left + window.scrollX;
+    if (left + 150 > window.innerWidth) left = window.innerWidth - 160;
+    pop.style.top  = top + 'px';
+    pop.style.left = left + 'px';
+  }
+
+  function selectStatus(status) {
+    if (!activePopoverEntryId) return;
+    const e = entries.find(x => x.id === activePopoverEntryId);
+    if (e) { e.status = status; saveData(); render(); }
+    closePopover();
+  }
+
+  function closePopover() {
+    document.getElementById('status-popover').classList.remove('open');
+    activePopoverEntryId = null;
+  }
+
+  document.addEventListener('click', closePopover);
+
+  // --- Note Editing ---
+  function startEditNote(event, id) {
+    const div = event.currentTarget;
+    const e   = entries.find(x => x.id === id);
+    if (!e) return;
+    const ta = document.createElement('textarea');
+    ta.className = 'note-input';
+    ta.value = e.note;
+    ta.placeholder = 'メモを入力…';
+    div.replaceWith(ta);
+    ta.focus();
+
+    const save = () => {
+      e.note = ta.value.trim();
+      saveData();
+      render();
+    };
+    ta.addEventListener('blur', save);
+    ta.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter' && ev.ctrlKey) { ta.blur(); }
+      if (ev.key === 'Escape') { ta.removeEventListener('blur', save); render(); }
+    });
+  }
+
+  // --- Helpers ---
+  function esc(s) {
+    return String(s ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/\n/g,'<br>');
+  }
+
+  function siteCls(site) {
+    if (site === 'Green')  return 'site-green';
+    if (site === 'Indeed') return 'site-indeed';
+    return 'site-other';
+  }
+
+  function fmtDate(d) {
+    if (!d) return '―';
+    const [y,m,day] = d.split('-');
+    return `${y}/${m}/${day}`;
+  }
+
+  // Init
+  document.getElementById('inp-date').valueAsDate = new Date();
+  loadData();
+  render();
+
+  // Enter key on company input
+  document.getElementById('inp-company').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addEntry();
+  });
+</script>
+</body>
+</html>
