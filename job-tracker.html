@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>就活進捗管理</title>
+  <script src="https://accounts.google.com/gsi/client" onload="onGisLoad()" async defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,6 +15,7 @@
       min-height: 100vh;
     }
 
+    /* ===== Header ===== */
     header {
       background: linear-gradient(135deg, #2b6cb0, #4299e1);
       color: white;
@@ -23,383 +25,463 @@
       justify-content: space-between;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
+    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.05em; }
+    header .subtitle { font-size: 0.85rem; opacity: 0.85; margin-top: 2px; }
 
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-    }
+    .header-right { display: flex; align-items: center; gap: 16px; }
 
-    header .subtitle {
-      font-size: 0.85rem;
-      opacity: 0.85;
-      margin-top: 2px;
-    }
-
-    .stats {
-      display: flex;
-      gap: 20px;
-    }
-
+    .stats { display: flex; gap: 12px; }
     .stat-box {
       background: rgba(255,255,255,0.2);
-      border-radius: 8px;
-      padding: 8px 16px;
-      text-align: center;
-      min-width: 60px;
+      border-radius: 8px; padding: 8px 16px;
+      text-align: center; min-width: 60px;
+    }
+    .stat-box .num { font-size: 1.4rem; font-weight: 700; }
+    .stat-box .label { font-size: 0.7rem; opacity: 0.9; }
+
+    .btn-settings {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white; border-radius: 8px;
+      padding: 8px 14px; cursor: pointer;
+      font-size: 0.85rem; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-settings:hover { background: rgba(255,255,255,0.25); }
+
+    /* ===== Settings Panel ===== */
+    .settings-panel {
+      background: #1a365d;
+      color: white;
+      padding: 0 32px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    .settings-panel.open {
+      max-height: 500px;
+      padding: 24px 32px;
+    }
+    .settings-panel h3 {
+      font-size: 0.95rem; font-weight: 700;
+      margin-bottom: 16px; opacity: 0.9;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px; align-items: end;
+      max-width: 600px; margin-bottom: 20px;
+    }
+    .settings-group label {
+      font-size: 0.75rem; font-weight: 600;
+      opacity: 0.7; display: block; margin-bottom: 4px;
+    }
+    .settings-group input {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 8px; padding: 9px 12px;
+      color: white; font-size: 0.85rem; font-family: inherit;
+      outline: none; transition: border-color 0.2s;
+    }
+    .settings-group input::placeholder { color: rgba(255,255,255,0.4); }
+    .settings-group input:focus { border-color: rgba(255,255,255,0.7); }
+    .btn-save-settings {
+      background: #4299e1; color: white; border: none;
+      border-radius: 8px; padding: 9px 20px;
+      font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s; white-space: nowrap;
+    }
+    .btn-save-settings:hover { opacity: 0.85; }
+
+    .setup-steps {
+      background: rgba(255,255,255,0.07);
+      border-radius: 10px; padding: 16px 20px;
+      max-width: 700px;
+    }
+    .setup-steps p {
+      font-size: 0.8rem; font-weight: 600;
+      opacity: 0.7; margin-bottom: 10px;
+    }
+    .setup-steps ol {
+      list-style: decimal; padding-left: 20px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .setup-steps li { font-size: 0.82rem; opacity: 0.85; line-height: 1.5; }
+    .setup-steps a { color: #90cdf4; }
+    .setup-steps code {
+      background: rgba(255,255,255,0.15);
+      padding: 1px 6px; border-radius: 4px;
+      font-family: monospace; font-size: 0.8rem;
     }
 
-    .stat-box .num {
-      font-size: 1.4rem;
-      font-weight: 700;
-    }
+    /* ===== Main ===== */
+    main { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
 
-    .stat-box .label {
-      font-size: 0.7rem;
-      opacity: 0.9;
-    }
-
-    main {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 28px 20px;
-    }
-
-    /* Add Form */
+    /* ===== Add Form ===== */
     .add-section {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 28px;
+      background: white; border-radius: 12px;
+      padding: 24px; margin-bottom: 16px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
-
     .add-section h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #2b6cb0;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 1rem; font-weight: 600;
+      margin-bottom: 16px; color: #2b6cb0;
     }
-
     .form-grid {
       display: grid;
       grid-template-columns: 2fr 1fr 1fr 1.5fr auto;
-      gap: 12px;
-      align-items: end;
+      gap: 12px; align-items: end;
     }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
     .form-group label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #718096;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 0.75rem; font-weight: 600;
+      color: #718096; text-transform: uppercase; letter-spacing: 0.05em;
     }
-
     .form-group input,
     .form-group select {
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 9px 12px;
-      font-size: 0.9rem;
-      font-family: inherit;
-      color: #2d3748;
-      background: white;
-      transition: border-color 0.2s;
-      outline: none;
+      border: 1.5px solid #e2e8f0; border-radius: 8px;
+      padding: 9px 12px; font-size: 0.9rem;
+      font-family: inherit; color: #2d3748;
+      background: white; transition: border-color 0.2s; outline: none;
     }
-
     .form-group input:focus,
     .form-group select:focus {
       border-color: #4299e1;
       box-shadow: 0 0 0 3px rgba(66,153,225,0.15);
     }
-
+    .form-hint {
+      font-size: 0.72rem; color: #a0aec0; margin-top: 6px;
+    }
     .btn-add {
       background: linear-gradient(135deg, #2b6cb0, #4299e1);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 9px 24px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-      white-space: nowrap;
+      color: white; border: none; border-radius: 8px;
+      padding: 9px 24px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap; font-family: inherit;
     }
-
     .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
     .btn-add:active { transform: translateY(0); }
 
-    /* Filter Bar */
+    /* pre-fill highlight */
+    .form-group input.prefilled { border-color: #48bb78; background: #f0fff4; }
+
+    /* ===== Tools Section ===== */
+    .tools-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .tool-card {
+      background: white; border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .tool-card h3 {
+      font-size: 0.9rem; font-weight: 700;
+      color: #2d3748; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tool-card p {
+      font-size: 0.8rem; color: #718096;
+      line-height: 1.5; margin-bottom: 14px;
+    }
+
+    /* Bookmarklet drag link */
+    .bookmarklet-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #744210, #c05621);
+      color: white; text-decoration: none;
+      padding: 9px 18px; border-radius: 8px;
+      font-size: 0.85rem; font-weight: 600;
+      border: 2px dashed rgba(255,255,255,0.4);
+      cursor: grab; transition: opacity 0.15s;
+      user-select: none;
+    }
+    .bookmarklet-link:hover { opacity: 0.85; }
+    .bookmarklet-note {
+      font-size: 0.75rem; color: #a0aec0; margin-top: 8px;
+    }
+
+    /* Gmail connect */
+    .btn-gmail {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: #2d3748;
+      border: 1.5px solid #e2e8f0; border-radius: 8px;
+      padding: 9px 18px; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .btn-gmail:hover {
+      border-color: #4299e1;
+      box-shadow: 0 2px 8px rgba(66,153,225,0.15);
+    }
+    .btn-gmail:disabled { opacity: 0.5; cursor: not-allowed; }
+    .gmail-status {
+      font-size: 0.78rem; margin-top: 8px;
+    }
+    .gmail-status.connected { color: #276749; }
+    .gmail-status.error { color: #c53030; }
+    .gmail-status.loading { color: #2b6cb0; }
+
+    /* ===== Import Preview Panel ===== */
+    .import-panel {
+      background: white; border-radius: 12px;
+      padding: 24px; margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: none;
+    }
+    .import-panel.open { display: block; }
+    .import-panel-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 16px;
+    }
+    .import-panel-header h3 {
+      font-size: 0.95rem; font-weight: 700; color: #2b6cb0;
+    }
+    .import-actions { display: flex; gap: 10px; }
+    .btn-import-all {
+      background: #2b6cb0; color: white; border: none;
+      border-radius: 8px; padding: 7px 16px;
+      font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .btn-import-all:hover { opacity: 0.85; }
+    .btn-close-import {
+      background: none; border: 1.5px solid #e2e8f0;
+      border-radius: 8px; padding: 7px 14px;
+      font-size: 0.82rem; color: #718096;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn-close-import:hover { border-color: #a0aec0; }
+
+    .import-table { width: 100%; border-collapse: collapse; }
+    .import-table th {
+      background: #f7fafc;
+      padding: 10px 12px;
+      text-align: left; font-size: 0.73rem;
+      font-weight: 700; color: #718096;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .import-table td {
+      padding: 10px 12px;
+      font-size: 0.84rem;
+      border-bottom: 1px solid #f0f4f8;
+      vertical-align: middle;
+    }
+    .import-table tr:last-child td { border-bottom: none; }
+    .import-table tr.duplicate { background: #fffbeb; }
+    .import-table tr.duplicate .dup-badge {
+      font-size: 0.7rem; color: #b7791f;
+      background: #fefcbf; padding: 2px 6px;
+      border-radius: 4px; margin-left: 6px;
+    }
+    .import-table input[type="text"] {
+      border: 1.5px solid #e2e8f0; border-radius: 6px;
+      padding: 5px 8px; font-size: 0.82rem;
+      font-family: inherit; width: 100%; outline: none;
+    }
+    .import-table input[type="text"]:focus { border-color: #4299e1; }
+    .import-table select {
+      border: 1.5px solid #e2e8f0; border-radius: 6px;
+      padding: 5px 8px; font-size: 0.82rem;
+      font-family: inherit; outline: none; background: white;
+    }
+    .import-check { width: 18px; height: 18px; cursor: pointer; accent-color: #2b6cb0; }
+
+    .import-subject {
+      font-size: 0.75rem; color: #a0aec0;
+      margin-top: 2px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+      max-width: 250px;
+    }
+
+    /* ===== Filter Bar ===== */
     .filter-bar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      align-items: center;
+      display: flex; gap: 10px; margin-bottom: 16px;
+      flex-wrap: wrap; align-items: center;
     }
-
-    .filter-bar span {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #718096;
-    }
-
+    .filter-bar span { font-size: 0.8rem; font-weight: 600; color: #718096; }
     .filter-btn {
-      border: 1.5px solid #e2e8f0;
-      background: white;
-      border-radius: 20px;
-      padding: 4px 14px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.15s;
-      font-family: inherit;
-      color: #4a5568;
+      border: 1.5px solid #e2e8f0; background: white;
+      border-radius: 20px; padding: 4px 14px;
+      font-size: 0.8rem; cursor: pointer;
+      transition: all 0.15s; font-family: inherit; color: #4a5568;
     }
-
     .filter-btn:hover { border-color: #4299e1; color: #2b6cb0; }
     .filter-btn.active { background: #2b6cb0; color: white; border-color: #2b6cb0; }
 
-    /* Table */
+    /* ===== Table ===== */
     .table-wrapper {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      overflow: hidden;
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;
     }
-
     .table-header-bar {
-      padding: 16px 20px;
-      border-bottom: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: space-between;
     }
+    .table-header-bar h2 { font-size: 0.95rem; font-weight: 600; color: #4a5568; }
+    .entry-count { font-size: 0.8rem; color: #a0aec0; }
 
-    .table-header-bar h2 {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #4a5568;
-    }
-
-    .entry-count {
-      font-size: 0.8rem;
-      color: #a0aec0;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
+    table { width: 100%; border-collapse: collapse; }
     thead th {
-      background: #f7fafc;
-      padding: 12px 16px;
-      text-align: left;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #718096;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      background: #f7fafc; padding: 12px 16px; text-align: left;
+      font-size: 0.75rem; font-weight: 700; color: #718096;
+      text-transform: uppercase; letter-spacing: 0.06em;
       border-bottom: 1px solid #e2e8f0;
     }
-
-    tbody tr {
-      border-bottom: 1px solid #f0f4f8;
-      transition: background 0.15s;
-    }
-
+    tbody tr { border-bottom: 1px solid #f0f4f8; transition: background 0.15s; }
     tbody tr:hover { background: #f7fafc; }
     tbody tr:last-child { border-bottom: none; }
+    td { padding: 14px 16px; font-size: 0.88rem; vertical-align: top; }
+    .company-name { font-weight: 600; color: #2d3748; }
 
-    td {
-      padding: 14px 16px;
-      font-size: 0.88rem;
-      vertical-align: top;
-    }
-
-    .company-name {
-      font-weight: 600;
-      color: #2d3748;
-    }
-
-    /* Site Badge */
     .site-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 700;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 12px;
+      font-size: 0.75rem; font-weight: 700;
     }
+    .site-green  { background: #c6f6d5; color: #276749; }
+    .site-indeed { background: #bee3f8; color: #2c5282; }
+    .site-other  { background: #e2e8f0; color: #4a5568; }
 
-    .site-green {
-      background: #c6f6d5;
-      color: #276749;
-    }
-
-    .site-indeed {
-      background: #bee3f8;
-      color: #2c5282;
-    }
-
-    .site-other {
-      background: #e2e8f0;
-      color: #4a5568;
-    }
-
-    /* Status Badge */
     .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.15s;
-      user-select: none;
-      white-space: nowrap;
+      display: inline-block; padding: 4px 12px;
+      border-radius: 12px; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; transition: transform 0.1s, box-shadow 0.15s;
+      user-select: none; white-space: nowrap;
     }
-
-    .status-badge:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    }
-
+    .status-badge:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
     .status-badge:active { transform: scale(0.97); }
 
-    .s-書類選考  { background: #ebf8ff; color: #2c5282; border: 1.5px solid #bee3f8; }
-    .s-一次面接  { background: #fefcbf; color: #744210; border: 1.5px solid #faf089; }
-    .s-二次面接  { background: #feebc8; color: #7b341e; border: 1.5px solid #fbd38d; }
-    .s-最終面接  { background: #fed7e2; color: #702459; border: 1.5px solid #feb2c6; }
-    .s-結果待ち  { background: #e9d8fd; color: #553c9a; border: 1.5px solid #d6bcfa; }
-    .s-内定      { background: #c6f6d5; color: #276749; border: 1.5px solid #9ae6b4; }
-    .s-不合格    { background: #f0f4f8; color: #a0aec0; border: 1.5px solid #e2e8f0; }
+    .s-書類選考 { background: #ebf8ff; color: #2c5282; border: 1.5px solid #bee3f8; }
+    .s-一次面接 { background: #fefcbf; color: #744210; border: 1.5px solid #faf089; }
+    .s-二次面接 { background: #feebc8; color: #7b341e; border: 1.5px solid #fbd38d; }
+    .s-最終面接 { background: #fed7e2; color: #702459; border: 1.5px solid #feb2c6; }
+    .s-結果待ち { background: #e9d8fd; color: #553c9a; border: 1.5px solid #d6bcfa; }
+    .s-内定     { background: #c6f6d5; color: #276749; border: 1.5px solid #9ae6b4; }
+    .s-不合格   { background: #f0f4f8; color: #a0aec0; border: 1.5px solid #e2e8f0; }
 
-    /* Notes */
-    .note-cell {
-      max-width: 220px;
-    }
-
+    .note-cell { max-width: 220px; }
     .note-text {
-      font-size: 0.82rem;
-      color: #718096;
-      cursor: pointer;
-      min-height: 22px;
-      line-height: 1.4;
+      font-size: 0.82rem; color: #718096;
+      cursor: pointer; min-height: 22px; line-height: 1.4;
     }
-
     .note-text:empty::before {
       content: 'クリックしてメモを追加…';
-      color: #cbd5e0;
-      font-style: italic;
+      color: #cbd5e0; font-style: italic;
     }
-
     .note-input {
-      width: 100%;
-      border: 1.5px solid #4299e1;
-      border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 0.82rem;
-      font-family: inherit;
-      color: #2d3748;
-      resize: none;
-      outline: none;
-      min-height: 60px;
-      background: white;
+      width: 100%; border: 1.5px solid #4299e1;
+      border-radius: 6px; padding: 6px 8px;
+      font-size: 0.82rem; font-family: inherit;
+      color: #2d3748; resize: none; outline: none;
+      min-height: 60px; background: white;
     }
 
-    /* Date */
-    .date-text {
-      color: #718096;
-      font-size: 0.82rem;
-    }
-
-    /* Delete */
+    .date-text { color: #718096; font-size: 0.82rem; }
     .btn-delete {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #cbd5e0;
-      font-size: 1rem;
-      padding: 4px 6px;
-      border-radius: 6px;
+      background: none; border: none; cursor: pointer;
+      color: #cbd5e0; font-size: 1rem;
+      padding: 4px 6px; border-radius: 6px;
       transition: color 0.15s, background 0.15s;
     }
-
     .btn-delete:hover { color: #fc8181; background: #fff5f5; }
 
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #a0aec0;
-    }
-
+    .empty-state { text-align: center; padding: 60px 20px; color: #a0aec0; }
     .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
     .empty-state p { font-size: 0.9rem; }
 
-    /* Status picker popover */
+    /* ===== Status Popover ===== */
     .status-popover {
-      position: fixed;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      padding: 8px;
-      z-index: 1000;
-      display: none;
-      min-width: 140px;
+      position: fixed; background: white;
+      border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      padding: 8px; z-index: 1000; display: none; min-width: 140px;
     }
-
     .status-popover.open { display: block; }
-
     .status-option {
-      padding: 7px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.82rem;
-      font-weight: 600;
-      transition: background 0.1s;
+      padding: 7px 12px; border-radius: 6px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 600; transition: filter 0.1s;
     }
-
     .status-option:hover { filter: brightness(0.95); }
 
-    /* Responsive */
+    /* ===== Toast ===== */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 2000;
+    }
+    .toast {
+      padding: 12px 20px; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      animation: slideIn 0.25s ease;
+      max-width: 300px;
+    }
+    .toast.success { background: #276749; color: white; }
+    .toast.error   { background: #c53030; color: white; }
+    .toast.info    { background: #2b6cb0; color: white; }
+    .toast.warning { background: #c05621; color: white; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      .tools-section { grid-template-columns: 1fr; }
+    }
     @media (max-width: 768px) {
-      .form-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
+      .form-grid { grid-template-columns: 1fr 1fr; }
       .stats { display: none; }
-
       header { padding: 16px 20px; }
-
+      .settings-panel { padding: 0 20px; }
+      .settings-panel.open { padding: 20px; }
       td, th { padding: 10px 12px; }
-
       .note-cell { max-width: 130px; }
     }
   </style>
 </head>
 <body>
 
+<!-- Header -->
 <header>
   <div>
     <h1>📋 就活進捗管理</h1>
     <div class="subtitle">Job Application Tracker</div>
   </div>
-  <div class="stats" id="stats"></div>
+  <div class="header-right">
+    <div class="stats" id="stats"></div>
+    <button class="btn-settings" onclick="toggleSettings()">⚙ Gmail設定</button>
+  </div>
 </header>
+
+<!-- Settings Panel -->
+<div class="settings-panel" id="settings-panel">
+  <h3>⚙ Gmail連携設定</h3>
+  <div class="settings-grid">
+    <div class="settings-group">
+      <label>Google OAuth Client ID</label>
+      <input type="text" id="inp-client-id" placeholder="xxxxxxxxxx.apps.googleusercontent.com" />
+    </div>
+    <button class="btn-save-settings" onclick="saveClientId()">保存</button>
+  </div>
+  <div class="setup-steps">
+    <p>📋 Google Cloud Console での設定手順（無料・5分）</p>
+    <ol>
+      <li><a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a> にアクセスし、新しいプロジェクトを作成</li>
+      <li>「APIとサービス」→「ライブラリ」から <strong>Gmail API</strong> を有効化</li>
+      <li>「APIとサービス」→「認証情報」→「認証情報を作成」→「OAuthクライアントID」</li>
+      <li>アプリケーションの種類は「ウェブアプリケーション」を選択</li>
+      <li>「承認済みのJavaScriptオリジン」に <code>https://hinata2490.github.io</code> を追加</li>
+      <li>作成されたクライアントIDをコピーして上の欄に貼り付け → 保存</li>
+    </ol>
+  </div>
+</div>
 
 <main>
   <!-- Add Form -->
@@ -408,7 +490,7 @@
     <div class="form-grid">
       <div class="form-group">
         <label>企業名</label>
-        <input type="text" id="inp-company" placeholder="例：株式会社〇〇" />
+        <input type="text" id="inp-company" placeholder="例：株式会社〇〇" autocomplete="off" />
       </div>
       <div class="form-group">
         <label>求人サイト</label>
@@ -436,6 +518,56 @@
       </div>
       <button class="btn-add" onclick="addEntry()">追加</button>
     </div>
+    <p class="form-hint">※ Shift + Enter でも追加できます</p>
+  </div>
+
+  <!-- Tools -->
+  <div class="tools-section">
+    <!-- Bookmarklet -->
+    <div class="tool-card">
+      <h3>🔖 ブックマークレット</h3>
+      <p>GreenやIndeedの求人ページを開いた状態でブックマークをクリックすると、企業名を自動入力してここに追加できます。</p>
+      <a id="bookmarklet-link" class="bookmarklet-link" title="ブックマークバーにドラッグしてください">
+        📌 求人ページから追加
+      </a>
+      <p class="bookmarklet-note">↑ ブラウザのブックマークバーにドラッグして登録してください</p>
+    </div>
+
+    <!-- Gmail -->
+    <div class="tool-card">
+      <h3>📧 Gmailから自動取得</h3>
+      <p>GreenやIndeedからの採用メールを読み取り、応募状況を自動で取り込みます。（要: 上の歯車アイコンでClient ID設定）</p>
+      <button class="btn-gmail" id="btn-gmail" onclick="connectGmail()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="#EA4335"/>
+        </svg>
+        Gmailと連携してスキャン
+      </button>
+      <p class="gmail-status" id="gmail-status"></p>
+    </div>
+  </div>
+
+  <!-- Import Preview Panel -->
+  <div class="import-panel" id="import-panel">
+    <div class="import-panel-header">
+      <h3>📥 メールから見つかった応募（取り込む項目を選択）</h3>
+      <div class="import-actions">
+        <button class="btn-import-all" onclick="importSelected()">選択したものを追加</button>
+        <button class="btn-close-import" onclick="closeImport()">閉じる</button>
+      </div>
+    </div>
+    <table class="import-table">
+      <thead>
+        <tr>
+          <th style="width:36px"></th>
+          <th>企業名（編集可）</th>
+          <th>サイト</th>
+          <th>日付</th>
+          <th>ステータス（変更可）</th>
+        </tr>
+      </thead>
+      <tbody id="import-tbody"></tbody>
+    </table>
   </div>
 
   <!-- Filter -->
@@ -488,191 +620,534 @@
   <div class="status-option s-不合格"   onclick="selectStatus('不合格')">不合格</div>
 </div>
 
+<!-- Toast -->
+<div class="toast-container" id="toast-container"></div>
+
 <script>
-  const STATUSES = ['書類選考','一次面接','二次面接','最終面接','結果待ち','内定','不合格'];
-  const STORAGE_KEY = 'job-tracker-v1';
+// =============================================
+// Constants & State
+// =============================================
+const STORAGE_KEY   = 'job-tracker-v1';
+const CLIENT_ID_KEY = 'job-tracker-gmail-client-id';
+const TRACKER_URL   = 'https://hinata2490.github.io/job-tracker.html';
 
-  let entries = [];
-  let currentFilter = 'all';
-  let activePopoverEntryId = null;
+let entries = [];
+let currentFilter = 'all';
+let activePopoverEntryId = null;
+let accessToken = null;
+let tokenClient = null;
+let importCandidates = [];
 
-  // --- Data ---
-  function loadData() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      entries = raw ? JSON.parse(raw) : [];
-    } catch { entries = []; }
+// =============================================
+// Data
+// =============================================
+function loadData() {
+  try { entries = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { entries = []; }
+}
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+function getClientId() {
+  return localStorage.getItem(CLIENT_ID_KEY) || '';
+}
+
+// =============================================
+// Settings
+// =============================================
+function toggleSettings() {
+  const panel = document.getElementById('settings-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    document.getElementById('inp-client-id').value = getClientId();
   }
+}
 
-  function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+function saveClientId() {
+  const val = document.getElementById('inp-client-id').value.trim();
+  if (!val) { showToast('Client IDを入力してください', 'warning'); return; }
+  localStorage.setItem(CLIENT_ID_KEY, val);
+  showToast('Client IDを保存しました', 'success');
+  // Re-init GIS if already loaded
+  if (window.google?.accounts?.oauth2) initTokenClient(val);
+}
+
+// =============================================
+// Google Identity Services (Gmail OAuth)
+// =============================================
+function onGisLoad() {
+  const clientId = getClientId();
+  if (clientId) initTokenClient(clientId);
+}
+
+function initTokenClient(clientId) {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/gmail.readonly',
+    callback: async (resp) => {
+      if (resp.error) {
+        setGmailStatus('Gmail認証エラー: ' + resp.error, 'error');
+        return;
+      }
+      accessToken = resp.access_token;
+      await scanGmail();
+    },
+  });
+}
+
+function connectGmail() {
+  const clientId = getClientId();
+  if (!clientId) {
+    document.getElementById('settings-panel').classList.add('open');
+    document.getElementById('inp-client-id').focus();
+    showToast('先にGmail設定からClient IDを入力してください', 'warning');
+    return;
   }
-
-  function genId() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+  if (!window.google?.accounts?.oauth2) {
+    showToast('Google APIの読み込み中です。少し待ってから再試行してください', 'info');
+    return;
   }
+  if (!tokenClient) initTokenClient(clientId);
+  setGmailStatus('Googleアカウントで認証中…', 'loading');
+  tokenClient.requestAccessToken({ prompt: '' });
+}
 
-  // --- UI ---
-  function addEntry() {
-    const company = document.getElementById('inp-company').value.trim();
-    if (!company) {
-      document.getElementById('inp-company').focus();
+// =============================================
+// Gmail Scan
+// =============================================
+async function scanGmail() {
+  setGmailStatus('メールをスキャン中…', 'loading');
+  document.getElementById('btn-gmail').disabled = true;
+
+  const query = 'from:(green.co.jp indeed.com doda.jp mynavi.jp rikunabi.com) newer_than:6m';
+  const listUrl =
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=50`;
+
+  try {
+    const listRes  = await gmailFetch(listUrl);
+    const messages = listRes.messages || [];
+
+    if (messages.length === 0) {
+      setGmailStatus('該当するメールが見つかりませんでした', 'error');
+      showToast('Green/Indeedからのメールは見つかりませんでした', 'info');
+      document.getElementById('btn-gmail').disabled = false;
       return;
     }
-    const site   = document.getElementById('inp-site').value;
-    const date   = document.getElementById('inp-date').value;
-    const status = document.getElementById('inp-status').value;
 
-    entries.unshift({ id: genId(), company, site, date, status, note: '' });
-    saveData();
-    document.getElementById('inp-company').value = '';
-    render();
-  }
+    const found = [];
+    const slice = messages.slice(0, 40);
 
-  function deleteEntry(id) {
-    entries = entries.filter(e => e.id !== id);
-    saveData();
-    render();
-  }
-
-  function setFilter(filter, btn) {
-    currentFilter = filter;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    render();
-  }
-
-  function render() {
-    const filtered = currentFilter === 'all'
-      ? entries
-      : entries.filter(e => e.status === currentFilter);
-
-    const tbody = document.getElementById('table-body');
-    const empty = document.getElementById('empty-state');
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = '';
-      empty.style.display = 'block';
-    } else {
-      empty.style.display = 'none';
-      tbody.innerHTML = filtered.map(e => `
-        <tr data-id="${e.id}">
-          <td><span class="company-name">${esc(e.company)}</span></td>
-          <td><span class="site-badge ${siteCls(e.site)}">${esc(e.site)}</span></td>
-          <td><span class="date-text">${fmtDate(e.date)}</span></td>
-          <td>
-            <span class="status-badge s-${e.status}" onclick="openStatusPicker(event, '${e.id}')">
-              ${esc(e.status)} ▾
-            </span>
-          </td>
-          <td class="note-cell">
-            <div class="note-text" onclick="startEditNote(event, '${e.id}')">${esc(e.note)}</div>
-          </td>
-          <td>
-            <button class="btn-delete" onclick="deleteEntry('${e.id}')" title="削除">✕</button>
-          </td>
-        </tr>
-      `).join('');
+    for (const msg of slice) {
+      const url =
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}` +
+        `?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`;
+      const detail  = await gmailFetch(url);
+      const headers = detail.payload?.headers || [];
+      const get     = (n) => headers.find(h => h.name === n)?.value || '';
+      const entry   = parseEmail(get('Subject'), get('From'), get('Date'), msg.id);
+      if (entry) found.push(entry);
     }
 
-    // Stats
-    const total   = entries.length;
-    const active  = entries.filter(e => !['内定','不合格'].includes(e.status)).length;
-    const offer   = entries.filter(e => e.status === '内定').length;
-    const ng      = entries.filter(e => e.status === '不合格').length;
-    document.getElementById('stats').innerHTML = `
-      <div class="stat-box"><div class="num">${total}</div><div class="label">応募</div></div>
-      <div class="stat-box"><div class="num">${active}</div><div class="label">進行中</div></div>
-      <div class="stat-box"><div class="num">${offer}</div><div class="label">内定</div></div>
-      <div class="stat-box"><div class="num">${ng}</div><div class="label">不合格</div></div>
-    `;
-    document.getElementById('entry-count').textContent =
-      filtered.length + ' 件' + (currentFilter !== 'all' ? `（全${total}件）` : '');
+    // Deduplicate by company+status
+    const unique = found.filter((a, i) =>
+      found.findIndex(b => b.company === a.company && b.status === a.status) === i
+    );
+
+    importCandidates = unique;
+    renderImportPreview();
+
+    setGmailStatus(`${unique.length} 件のメールを検出しました`, 'connected');
+    showToast(`${unique.length} 件の応募候補が見つかりました`, 'success');
+
+  } catch (err) {
+    setGmailStatus('エラー: ' + err.message, 'error');
+    showToast('メール取得エラー: ' + err.message, 'error');
   }
 
-  // --- Status Popover ---
-  function openStatusPicker(event, id) {
-    event.stopPropagation();
-    activePopoverEntryId = id;
-    const pop = document.getElementById('status-popover');
-    pop.classList.add('open');
-    const rect = event.target.getBoundingClientRect();
-    let top = rect.bottom + window.scrollY + 4;
-    let left = rect.left + window.scrollX;
-    if (left + 150 > window.innerWidth) left = window.innerWidth - 160;
-    pop.style.top  = top + 'px';
-    pop.style.left = left + 'px';
-  }
+  document.getElementById('btn-gmail').disabled = false;
+}
 
-  function selectStatus(status) {
-    if (!activePopoverEntryId) return;
-    const e = entries.find(x => x.id === activePopoverEntryId);
-    if (e) { e.status = status; saveData(); render(); }
-    closePopover();
-  }
-
-  function closePopover() {
-    document.getElementById('status-popover').classList.remove('open');
-    activePopoverEntryId = null;
-  }
-
-  document.addEventListener('click', closePopover);
-
-  // --- Note Editing ---
-  function startEditNote(event, id) {
-    const div = event.currentTarget;
-    const e   = entries.find(x => x.id === id);
-    if (!e) return;
-    const ta = document.createElement('textarea');
-    ta.className = 'note-input';
-    ta.value = e.note;
-    ta.placeholder = 'メモを入力…';
-    div.replaceWith(ta);
-    ta.focus();
-
-    const save = () => {
-      e.note = ta.value.trim();
-      saveData();
-      render();
-    };
-    ta.addEventListener('blur', save);
-    ta.addEventListener('keydown', ev => {
-      if (ev.key === 'Enter' && ev.ctrlKey) { ta.blur(); }
-      if (ev.key === 'Escape') { ta.removeEventListener('blur', save); render(); }
-    });
-  }
-
-  // --- Helpers ---
-  function esc(s) {
-    return String(s ?? '')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/\n/g,'<br>');
-  }
-
-  function siteCls(site) {
-    if (site === 'Green')  return 'site-green';
-    if (site === 'Indeed') return 'site-indeed';
-    return 'site-other';
-  }
-
-  function fmtDate(d) {
-    if (!d) return '―';
-    const [y,m,day] = d.split('-');
-    return `${y}/${m}/${day}`;
-  }
-
-  // Init
-  document.getElementById('inp-date').valueAsDate = new Date();
-  loadData();
-  render();
-
-  // Enter key on company input
-  document.getElementById('inp-company').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addEntry();
+async function gmailFetch(url) {
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` }
   });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// =============================================
+// Email Parsing
+// =============================================
+function parseEmail(subject, from, dateStr, msgId) {
+  // Detect site
+  let site = 'その他';
+  if (/green\.co\.jp/i.test(from))   site = 'Green';
+  else if (/indeed\.com/i.test(from)) site = 'Indeed';
+  else if (/doda\.jp/i.test(from))    site = 'doda';
+  else if (/mynavi/i.test(from))      site = 'マイナビ';
+  else if (/rikunabi/i.test(from))    site = 'リクナビ';
+
+  // Extract company name
+  let company = '';
+  // Pattern 1: 【企業名】 or ［企業名］
+  const m1 = subject.match(/[【\[［]([^】\]］]{2,30})[】\]］]/);
+  if (m1 && !/Green|Indeed|doda|マイナビ|リクナビ/i.test(m1[1])) company = m1[1];
+
+  // Pattern 2: "企業名 からのメッセージ" / "企業名 より"
+  if (!company) {
+    const m2 = subject.match(/^(.{2,20}?)(?:\s*から(?:のメッセージ|メール)|より)/);
+    if (m2) company = m2[1].trim();
+  }
+  // Pattern 3: "企業名 への応募" / "企業名 の求人"
+  if (!company) {
+    const m3 = subject.match(/^(.{2,20}?)(?:\s*への応募|\s*の求人)/);
+    if (m3) company = m3[1].trim();
+  }
+  // Pattern 4: "株式会社〇〇" in subject
+  if (!company) {
+    const m4 = subject.match(/(?:株式会社|合同会社|有限会社)\S+/);
+    if (m4) company = m4[0];
+  }
+
+  if (!company || company.length < 2) company = '（企業名を確認してください）';
+
+  const status = detectStatus(subject);
+
+  // Parse date
+  let date = '';
+  try { date = new Date(dateStr).toISOString().slice(0, 10); }
+  catch { date = new Date().toISOString().slice(0, 10); }
+
+  // Skip pure "newsletter" style emails
+  if (/メールマガジン|まとめ|特集|新着求人/.test(subject)) return null;
+
+  return { company, site, date, status, subject, msgId };
+}
+
+function detectStatus(subject) {
+  if (/内定|採用.*決定|合格.*最終|内々定/.test(subject))       return '内定';
+  if (/不合格|見送り|残念ながら|選考.*終了|ご縁がなかった/.test(subject)) return '不合格';
+  if (/最終面接/.test(subject))                               return '最終面接';
+  if (/[二２]次面接/.test(subject))                           return '二次面接';
+  if (/[一１]次面接|面接.*ご案内|面接.*日程|面接.*調整/.test(subject)) return '一次面接';
+  if (/書類.*通過|書類.*合格|書類.*結果.*通過|選考.*通過/.test(subject)) return '一次面接';
+  if (/結果待ち|合否.*連絡|合否.*お待ち/.test(subject))        return '結果待ち';
+  return '書類選考';
+}
+
+// =============================================
+// Import Preview
+// =============================================
+function renderImportPreview() {
+  if (importCandidates.length === 0) return;
+
+  const existingCompanies = new Set(entries.map(e => e.company));
+  const tbody = document.getElementById('import-tbody');
+
+  tbody.innerHTML = importCandidates.map((c, i) => {
+    const isDup = existingCompanies.has(c.company);
+    const statusOptions = ['書類選考','一次面接','二次面接','最終面接','結果待ち','内定','不合格']
+      .map(s => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`)
+      .join('');
+    const siteCls = c.site === 'Green' ? 'site-green' : c.site === 'Indeed' ? 'site-indeed' : 'site-other';
+
+    return `
+      <tr class="${isDup ? 'duplicate' : ''}" id="import-row-${i}">
+        <td><input type="checkbox" class="import-check" data-idx="${i}" checked /></td>
+        <td>
+          <input type="text" value="${esc(c.company)}" data-field="company" data-idx="${i}" />
+          ${isDup ? '<span class="dup-badge">重複の可能性</span>' : ''}
+          <div class="import-subject" title="${esc(c.subject)}">${esc(c.subject)}</div>
+        </td>
+        <td><span class="site-badge ${siteCls}">${esc(c.site)}</span></td>
+        <td><span class="date-text">${fmtDate(c.date)}</span></td>
+        <td>
+          <select data-field="status" data-idx="${i}">${statusOptions}</select>
+        </td>
+      </tr>`;
+  }).join('');
+
+  // Sync edits back to importCandidates
+  tbody.querySelectorAll('input[data-field], select[data-field]').forEach(el => {
+    el.addEventListener('change', () => {
+      const idx   = parseInt(el.dataset.idx);
+      const field = el.dataset.field;
+      importCandidates[idx][field] = el.value;
+    });
+  });
+
+  document.getElementById('import-panel').classList.add('open');
+  document.getElementById('import-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function importSelected() {
+  const checks = document.querySelectorAll('.import-check:checked');
+  let added = 0;
+  checks.forEach(cb => {
+    const idx = parseInt(cb.dataset.idx);
+    const c   = importCandidates[idx];
+    // Re-read edited values
+    const row     = document.getElementById(`import-row-${idx}`);
+    const company = row.querySelector('input[data-field="company"]').value.trim();
+    const status  = row.querySelector('select[data-field="status"]').value;
+    entries.unshift({ id: genId(), company: company || c.company, site: c.site, date: c.date, status, note: '' });
+    added++;
+  });
+  saveData();
+  render();
+  closeImport();
+  showToast(`${added} 件を追加しました`, 'success');
+}
+
+function closeImport() {
+  document.getElementById('import-panel').classList.remove('open');
+  importCandidates = [];
+}
+
+// =============================================
+// Main Entries
+// =============================================
+function addEntry() {
+  const company = document.getElementById('inp-company').value.trim();
+  if (!company) { document.getElementById('inp-company').focus(); return; }
+  const site   = document.getElementById('inp-site').value;
+  const date   = document.getElementById('inp-date').value;
+  const status = document.getElementById('inp-status').value;
+
+  entries.unshift({ id: genId(), company, site, date, status, note: '' });
+  saveData();
+
+  // Clear form & remove prefill styles
+  document.getElementById('inp-company').value = '';
+  document.getElementById('inp-company').classList.remove('prefilled');
+  render();
+  showToast(`「${company}」を追加しました`, 'success');
+}
+
+function deleteEntry(id) {
+  entries = entries.filter(e => e.id !== id);
+  saveData();
+  render();
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// =============================================
+// Render
+// =============================================
+function render() {
+  const filtered = currentFilter === 'all'
+    ? entries : entries.filter(e => e.status === currentFilter);
+
+  const tbody = document.getElementById('table-body');
+  const empty = document.getElementById('empty-state');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    tbody.innerHTML = filtered.map(e => `
+      <tr data-id="${e.id}">
+        <td><span class="company-name">${esc(e.company)}</span></td>
+        <td><span class="site-badge ${siteCls(e.site)}">${esc(e.site)}</span></td>
+        <td><span class="date-text">${fmtDate(e.date)}</span></td>
+        <td>
+          <span class="status-badge s-${e.status}" onclick="openStatusPicker(event,'${e.id}')">
+            ${esc(e.status)} ▾
+          </span>
+        </td>
+        <td class="note-cell">
+          <div class="note-text" onclick="startEditNote(event,'${e.id}')">${esc(e.note)}</div>
+        </td>
+        <td>
+          <button class="btn-delete" onclick="deleteEntry('${e.id}')" title="削除">✕</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  // Stats
+  const total  = entries.length;
+  const active = entries.filter(e => !['内定','不合格'].includes(e.status)).length;
+  const offer  = entries.filter(e => e.status === '内定').length;
+  const ng     = entries.filter(e => e.status === '不合格').length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-box"><div class="num">${total}</div><div class="label">応募</div></div>
+    <div class="stat-box"><div class="num">${active}</div><div class="label">進行中</div></div>
+    <div class="stat-box"><div class="num">${offer}</div><div class="label">内定</div></div>
+    <div class="stat-box"><div class="num">${ng}</div><div class="label">不合格</div></div>`;
+
+  document.getElementById('entry-count').textContent =
+    filtered.length + ' 件' + (currentFilter !== 'all' ? `（全${total}件）` : '');
+}
+
+// =============================================
+// Status Popover
+// =============================================
+function openStatusPicker(event, id) {
+  event.stopPropagation();
+  activePopoverEntryId = id;
+  const pop  = document.getElementById('status-popover');
+  pop.classList.add('open');
+  const rect = event.target.getBoundingClientRect();
+  let top    = rect.bottom + window.scrollY + 4;
+  let left   = rect.left   + window.scrollX;
+  if (left + 150 > window.innerWidth) left = window.innerWidth - 160;
+  pop.style.top  = top  + 'px';
+  pop.style.left = left + 'px';
+}
+
+function selectStatus(status) {
+  if (!activePopoverEntryId) return;
+  const e = entries.find(x => x.id === activePopoverEntryId);
+  if (e) { e.status = status; saveData(); render(); }
+  closePopover();
+}
+
+function closePopover() {
+  document.getElementById('status-popover').classList.remove('open');
+  activePopoverEntryId = null;
+}
+document.addEventListener('click', closePopover);
+
+// =============================================
+// Note Editing
+// =============================================
+function startEditNote(event, id) {
+  const div = event.currentTarget;
+  const e   = entries.find(x => x.id === id);
+  if (!e) return;
+  const ta  = document.createElement('textarea');
+  ta.className   = 'note-input';
+  ta.value       = e.note;
+  ta.placeholder = 'メモを入力…（Ctrl+Enterで保存）';
+  div.replaceWith(ta);
+  ta.focus();
+
+  const save = () => { e.note = ta.value.trim(); saveData(); render(); };
+  ta.addEventListener('blur', save);
+  ta.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) ta.blur();
+    if (ev.key === 'Escape') { ta.removeEventListener('blur', save); render(); }
+  });
+}
+
+// =============================================
+// Helpers
+// =============================================
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/\n/g,'<br>');
+}
+function siteCls(site) {
+  if (site === 'Green')  return 'site-green';
+  if (site === 'Indeed') return 'site-indeed';
+  return 'site-other';
+}
+function fmtDate(d) {
+  if (!d) return '―';
+  const [y,m,day] = d.split('-');
+  return `${y}/${m}/${day}`;
+}
+
+function setGmailStatus(msg, type) {
+  const el = document.getElementById('gmail-status');
+  el.textContent = msg;
+  el.className = `gmail-status ${type}`;
+}
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const el        = document.createElement('div');
+  el.className    = `toast ${type}`;
+  el.textContent  = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// =============================================
+// Bookmarklet Generation
+// =============================================
+function buildBookmarklet() {
+  const trackerUrl = TRACKER_URL;
+  // Minified code that runs on the job listing page
+  const code = `(function(){
+var h=location.hostname,s='その他';
+if(h.includes('green.co.jp'))s='Green';
+else if(h.includes('indeed.com'))s='Indeed';
+else if(h.includes('doda.jp'))s='doda';
+var c='',selectors=[
+'.job_offer_company_name','.companyName','[class*="company-name"]',
+'[data-testid="inlineHeader-companyName"] a',
+'[data-company-name]','span[class*="EmployerName"]',
+'.css-1ioi40n span','h1[class*="company"]'
+];
+for(var i=0;i<selectors.length;i++){
+  var el=document.querySelector(selectors[i]);
+  if(el&&el.textContent.trim().length>1){c=el.textContent.trim();break;}
+}
+if(!c)c=prompt('企業名を入力してください：')||'';
+if(!c)return;
+var d=new Date().toISOString().slice(0,10);
+window.open('${trackerUrl}?company='+encodeURIComponent(c)+'&site='+encodeURIComponent(s)+'&date='+d,'_blank');
+})()`.replace(/\n\s*/g,' ');
+
+  document.getElementById('bookmarklet-link').href = 'javascript:' + code;
+}
+
+// =============================================
+// URL Params (bookmarklet pre-fill)
+// =============================================
+function readUrlParams() {
+  const params  = new URLSearchParams(window.location.search);
+  const company = params.get('company');
+  const site    = params.get('site');
+  const date    = params.get('date');
+
+  if (!company) return;
+
+  const inp = document.getElementById('inp-company');
+  inp.value = company;
+  inp.classList.add('prefilled');
+
+  if (site) {
+    const sel = document.getElementById('inp-site');
+    [...sel.options].forEach(o => { if (o.value === site) o.selected = true; });
+  }
+  if (date) document.getElementById('inp-date').value = date;
+
+  // Clean URL without reloading
+  window.history.replaceState({}, '', window.location.pathname);
+
+  showToast(`「${company}」の情報を取り込みました。確認して「追加」を押してください`, 'info');
+  inp.focus();
+}
+
+// =============================================
+// Init
+// =============================================
+document.getElementById('inp-date').valueAsDate = new Date();
+loadData();
+render();
+buildBookmarklet();
+readUrlParams();
+
+// Enter key: only Shift+Enter submits
+document.getElementById('inp-company').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.shiftKey) addEntry();
+  // Prevent plain Enter from doing anything unexpected
+  if (e.key === 'Enter' && !e.shiftKey) e.preventDefault();
+});
 </script>
 </body>
 </html>
