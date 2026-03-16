@@ -795,7 +795,7 @@ async function scanGmail() {
       const detail  = await gmailFetch(url);
       const headers = detail.payload?.headers || [];
       const get     = (n) => headers.find(h => h.name === n)?.value || '';
-      const entry   = parseEmail(get('Subject'), get('From'), get('Date'), msg.id, detail.snippet || '');
+      const entry   = parseEmail(get('Subject'), get('From'), get('Date'), msg.id, msg.threadId || msg.id, detail.snippet || '');
       if (entry) found.push(entry);
     }
 
@@ -867,7 +867,7 @@ function autoUpdateExistingEntries(found) {
 // =============================================
 // Email Parsing
 // =============================================
-function parseEmail(subject, from, dateStr, msgId, snippet = '') {
+function parseEmail(subject, from, dateStr, msgId, threadId, snippet = '') {
   // Detect site
   let site = 'その他';
   if (/green\.co\.jp/i.test(from))   site = 'Green';
@@ -923,12 +923,18 @@ function parseEmail(subject, from, dateStr, msgId, snippet = '') {
   // ニュースレター系は完全スキップ
   if (/メールマガジン|まとめ|特集/.test(subject) && junk) return null;
 
-  // Parse date
+  // Parse date + time
   let date = '';
-  try { date = new Date(dateStr).toISOString().slice(0, 10); }
-  catch { date = new Date().toISOString().slice(0, 10); }
+  let emailTime = '';
+  try {
+    const dt = new Date(dateStr);
+    date = dt.toISOString().slice(0, 10);
+    emailTime = `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+  } catch {
+    date = new Date().toISOString().slice(0, 10);
+  }
 
-  return { company, site, date, status, subject, snippet, msgId, junk };
+  return { company, site, date, emailTime, status, subject, snippet, msgId, threadId, junk };
 }
 
 function isJunkEmail(subject, snippet, company) {
@@ -966,7 +972,8 @@ function renderImportPreview() {
       .map(s => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${s}</option>`)
       .join('');
     const siteCls  = c.site === 'Green' ? 'site-green' : c.site === 'Indeed' ? 'site-indeed' : 'site-other';
-    const gmailUrl = `https://mail.google.com/mail/u/0/#all/${c.msgId}`;
+    const gmailUrl = `https://mail.google.com/mail/u/0/#all/${c.threadId || c.msgId}`;
+    const dateTimeStr = c.emailTime ? `${fmtDate(c.date)} ${c.emailTime}` : fmtDate(c.date);
     const checked  = !c.junk;
 
     return `
@@ -982,7 +989,7 @@ function renderImportPreview() {
           </div>
         </td>
         <td><span class="site-badge ${siteCls}">${esc(c.site)}</span></td>
-        <td><span class="date-text">${fmtDate(c.date)}</span></td>
+        <td><span class="date-text">${dateTimeStr}</span></td>
         <td>
           <select data-field="status" data-idx="${i}">${statusOptions}</select>
         </td>
