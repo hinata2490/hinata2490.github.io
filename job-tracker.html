@@ -792,9 +792,21 @@ function parseEmail(subject, from, dateStr, msgId) {
 
   // Extract company name
   let company = '';
+
+  // Pattern 0: From display name (e.g. "株式会社アクセプトオール <no-reply@indeed.com>")
+  const fromDisplay = from.match(/^([^<@\n]+?)\s*</);
+  if (fromDisplay) {
+    const dn = fromDisplay[1].trim();
+    if (dn.length >= 2 && !/indeed|green|doda|mynavi|rikunabi|noreply|no.reply|エントリー|通知/i.test(dn)) {
+      company = dn;
+    }
+  }
+
   // Pattern 1: 【企業名】 or ［企業名］
-  const m1 = subject.match(/[【\[［]([^】\]］]{2,30})[】\]］]/);
-  if (m1 && !/Green|Indeed|doda|マイナビ|リクナビ/i.test(m1[1])) company = m1[1];
+  if (!company) {
+    const m1 = subject.match(/[【\[［]([^】\]］]{2,30})[】\]］]/);
+    if (m1 && !/Green|Indeed|doda|マイナビ|リクナビ|リモート|正社員|アルバイト|パート|業務委託/i.test(m1[1])) company = m1[1];
+  }
 
   // Pattern 2: "企業名 からのメッセージ" / "企業名 より"
   if (!company) {
@@ -806,10 +818,15 @@ function parseEmail(subject, from, dateStr, msgId) {
     const m3 = subject.match(/^(.{2,20}?)(?:\s*への応募|\s*の求人)/);
     if (m3) company = m3[1].trim();
   }
-  // Pattern 4: "株式会社〇〇" in subject
+  // Pattern 4: "株式会社〇〇" in subject or from
   if (!company) {
-    const m4 = subject.match(/(?:株式会社|合同会社|有限会社)\S+/);
+    const m4 = (subject + ' ' + from).match(/(?:株式会社|合同会社|有限会社)[^\s<>（）【】、。,.\d]{1,20}/);
     if (m4) company = m4[0];
+  }
+  // Pattern 5: "〇〇 - △△さんから応募がありました" → job title before " - "
+  if (!company) {
+    const m5 = subject.match(/^(.+?)\s*[-－]\s*.{1,10}さんから/);
+    if (m5) company = m5[1].trim().replace(/^["""「『]/,'').replace(/["""」』]$/,'');
   }
 
   if (!company || company.length < 2) company = '（企業名を確認してください）';
