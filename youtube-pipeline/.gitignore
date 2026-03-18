@@ -1,0 +1,19 @@
+# シークレット
+.env
+.secrets/
+
+# 生成ファイル（大容量）
+output/audio/
+output/video/
+output/thumbnails/
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS
+.DS_Store
