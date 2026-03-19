@@ -2,24 +2,24 @@ import React from "react";
 import { Img, staticFile } from "remotion";
 
 const IMAGES = {
-  normal:       staticFile("character/rei_normal.png"),
-  blink_half:   staticFile("character/rei_blink_half.png"),
-  blink_closed: staticFile("character/rei_blink_closed.png"),
-  mouth_open:   staticFile("character/rei_mouth_open.png"),
+  normal:       staticFile("character/metan_normal.png"),
+  blink_half:   staticFile("character/metan_blink_half.png"),
+  blink_closed: staticFile("character/metan_blink_closed.png"),
+  mouth_open:   staticFile("character/metan_mouth_open.png"),
 };
 
 function getBlinkState(frame: number): "open" | "half" | "closed" {
   const INTERVAL = 130; // 約4.3秒ごと
   const pos = frame % INTERVAL;
-  if (pos < 3) return "half";
-  if (pos < 6) return "closed";
-  if (pos < 9) return "half";
+  if (pos < 3) return "half";   // 目を閉じ始め
+  if (pos < 6) return "closed"; // 全閉じ
+  if (pos < 9) return "half";   // 目を開き始め
   return "open";
 }
 
 function getMouthState(frame: number, isTalking: boolean): "open" | "closed" {
   if (!isTalking) return "closed";
-  return Math.floor(frame / 8) % 2 === 0 ? "open" : "closed";
+  return Math.floor(frame / 4) % 2 === 0 ? "open" : "closed";
 }
 
 interface Props {
@@ -37,17 +37,14 @@ export const Character: React.FC<Props> = ({ isTalking, frame }) => {
   else if (blink === "closed") key = "blink_closed";
   else if (mouth === "open") key = "mouth_open";
 
-  const bob = Math.sin((frame / 90) * Math.PI) * 5;
-
   return (
     <div
       style={{
         position: "absolute",
-        right: -150,
-        bottom: -300,       // 足首より下は画面外
-        width: 1600,
-        height: 1600,
-        transform: `translateY(${bob}px)`,
+        right: 0,
+        bottom: -150,
+        width: 1000,
+        height: 1000,
       }}
     >
       <Img

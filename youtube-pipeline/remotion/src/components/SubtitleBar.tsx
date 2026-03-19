@@ -12,13 +12,18 @@ export const SubtitleBar: React.FC<Props> = ({ subtitles, currentTimeSec }) => {
   const { fps } = useVideoConfig();
   void frame; void fps; // 将来のアニメーション用
 
+  // 現在アクティブな字幕、なければ最後に表示されていた字幕を維持
   const current = subtitles.find(
     (s) => currentTimeSec >= s.start && currentTimeSec < s.end
   );
+  const lastShown = [...subtitles].reverse().find(
+    (s) => currentTimeSec >= s.start
+  );
+  const display = current ?? lastShown;
 
-  if (!current) return null;
+  if (!display) return null;
 
-  const isEmphasized = current.emphasized;
+  const isEmphasized = display.emphasized;
 
   return (
     <div
@@ -49,7 +54,7 @@ export const SubtitleBar: React.FC<Props> = ({ subtitles, currentTimeSec }) => {
           letterSpacing: "0.05em",
         }}
       >
-        {current.text}
+        {display.text}
       </p>
     </div>
   );

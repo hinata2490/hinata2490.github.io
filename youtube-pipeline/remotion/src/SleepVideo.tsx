@@ -48,7 +48,7 @@ export const SleepVideo: React.FC<{ data: CompositionData }> = ({ data }) => {
       {/* メイン音声 */}
       <Audio src={staticFile(data.audio)} />
 
-      {/* 強調字幕のピコン音 */}
+      {/* 強調字幕のピコン音（読み上げと同時） */}
       {data.subtitles
         .filter((s) => s.emphasized)
         .map((s, i) => (

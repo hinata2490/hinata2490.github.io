@@ -69,7 +69,7 @@ audio:
   engine: "voicevox"  # voicevox / openai / gtts
   voicevox:
     host: "http://localhost:50021"
-    speaker_id: 3      # ずんだもん (ノーマル) = 3, 四国めたん = 2, etc.
+    speaker_id: 2      # 四国めたん (ノーマル) = 2  ※ささやき=36も睡眠系に合う
     speed_scale: 1.0
     pitch_scale: 0.0
     intonation_scale: 1.2
