@@ -199,8 +199,11 @@ def compose_video(
             "-shortest",
             "-vf", f"scale={width}:{height},{subtitle_filter}",
             "-c:v", codec, "-b:v", bitrate,
+            "-pix_fmt", "yuv420p",
+            "-profile:v", "baseline", "-level", "3.1",
             "-c:a", "aac", "-b:a", "192k",
             "-r", str(fps),
+            "-movflags", "+faststart",
             str(output_path),
         ]
     else:
@@ -212,8 +215,11 @@ def compose_video(
             "-shortest",
             "-vf", f"scale={width}:{height},{subtitle_filter}",
             "-c:v", codec, "-b:v", bitrate,
+            "-pix_fmt", "yuv420p",
+            "-profile:v", "baseline", "-level", "3.1",
             "-c:a", "aac", "-b:a", "192k",
             "-r", str(fps),
+            "-movflags", "+faststart",
             str(output_path),
         ]
 
