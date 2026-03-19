@@ -1,0 +1,168 @@
+# ========================================
+# 睡眠チャンネル YouTube 自動化パイプライン設定
+# ========================================
+
+channel:
+  name: "睡眠改善ラボ"
+  genre: "sleep"
+  language: "ja"
+  default_tags:
+    - 睡眠
+    - 不眠
+    - 快眠
+    - 睡眠改善
+    - 睡眠の質
+    - 眠れない
+    - 睡眠科学
+  category_id: "27"  # Education
+
+# ----------------------------------------
+# Step 1: ネタ収集
+# ----------------------------------------
+collect:
+  sources:
+    rss:
+      - url: "https://pubmed.ncbi.nlm.nih.gov/rss/search/?term=sleep+quality&format=rss"
+        label: "PubMed Sleep Research"
+      - url: "https://www.sleepfoundation.org/feed"
+        label: "Sleep Foundation"
+    keywords:
+      - 不眠症 対策
+      - 快眠 方法
+      - 睡眠の質 向上
+      - 深い眠り
+      - 睡眠サイクル
+      - メラトニン
+      - 睡眠環境
+      - 朝スッキリ
+    youtube_trends:
+      enabled: true
+      max_results: 10
+  output_dir: "output/topics"
+  max_topics_per_run: 5
+
+# ----------------------------------------
+# Step 2: 台本生成 (Claude API)
+# ----------------------------------------
+script:
+  model: "claude-opus-4-6"
+  target_duration_minutes: 10
+  style: "conversational"  # conversational / lecture / storytelling
+  structure:
+    - hook          # 冒頭フック (30秒)
+    - intro         # チャンネル紹介 (30秒)
+    - main_content  # 本編 (8分)
+    - summary       # まとめ (30秒)
+    - outro         # アウトロ (30秒)
+  persona: |
+    あなたは睡眠専門家として語りかけます。
+    - 親しみやすく、でも科学的根拠を大切に
+    - 視聴者の悩みに寄り添うトーン
+    - 具体的なTipsを必ず含める
+    - 読了後に「やってみよう」と思わせる構成
+  output_dir: "output/scripts"
+
+# ----------------------------------------
+# Step 3: 音声生成
+# ----------------------------------------
+audio:
+  engine: "voicevox"  # voicevox / openai / gtts
+  voicevox:
+    host: "http://localhost:50021"
+    speaker_id: 2      # 四国めたん (ノーマル) = 2  ※ささやき=36も睡眠系に合う
+    speed_scale: 1.0
+    pitch_scale: 0.0
+    intonation_scale: 1.2
+    volume_scale: 1.0
+  openai:
+    model: "tts-1-hd"
+    voice: "nova"      # alloy/echo/fable/onyx/nova/shimmer
+    speed: 1.0
+  bgm:
+    enabled: true
+    dir: "assets/bgm"
+    volume: 0.08       # メイン音声に対するBGMの音量比
+    fade_in_sec: 3.0
+    fade_out_sec: 5.0
+  output_dir: "output/audio"
+  format: "mp3"
+
+# ----------------------------------------
+# Step 4: 映像合成 (FFmpeg)
+# ----------------------------------------
+video:
+  resolution: "1920x1080"
+  fps: 30
+  background:
+    dir: "assets/backgrounds"
+    type: "image"       # image / video / gradient
+    default_gradient:
+      colors: ["#0a0a2e", "#1a1a4e", "#0d1b3e"]
+  subtitle:
+    enabled: true
+    font: "assets/fonts/NotoSansJP-Regular.ttf"
+    font_size: 48
+    color: "white"
+    outline_color: "black"
+    outline_width: 3
+    position: "bottom"  # bottom / center
+    max_chars_per_line: 25
+  logo:
+    enabled: false
+    path: "assets/logo.png"
+    position: "top-right"
+    opacity: 0.7
+  output_dir: "output/video"
+  format: "mp4"
+  codec: "libx264"
+  bitrate: "4000k"
+
+# ----------------------------------------
+# Step 5: サムネイル生成
+# ----------------------------------------
+thumbnail:
+  size: [1280, 720]
+  template: "sleep_dark"   # sleep_dark / sleep_bright / minimal
+  templates:
+    sleep_dark:
+      bg_color: [10, 10, 46]
+      accent_color: [100, 149, 237]  # コーンフラワーブルー
+      text_color: [255, 255, 255]
+      font: "assets/fonts/NotoSansJP-Bold.ttf"
+      title_font_size: 72
+      subtitle_font_size: 40
+    sleep_bright:
+      bg_color: [25, 25, 112]
+      accent_color: [255, 215, 0]    # ゴールド
+      text_color: [255, 255, 255]
+      font: "assets/fonts/NotoSansJP-Bold.ttf"
+      title_font_size: 72
+      subtitle_font_size: 40
+  emoji_overlay: true      # タイトルに絵文字を自動付与
+  output_dir: "output/thumbnails"
+  format: "jpg"
+  quality: 95
+
+# ----------------------------------------
+# Step 6: YouTube アップロード
+# ----------------------------------------
+upload:
+  credentials_path: ".secrets/youtube_credentials.json"
+  token_path: ".secrets/youtube_token.pickle"
+  schedule:
+    enabled: false       # true にすると予約投稿
+    days_ahead: 1        # 何日後に公開するか
+    publish_time: "19:00:00"  # JST
+  privacy: "private"     # private / unlisted / public
+  playlist_id: ""        # アップロード先プレイリストID (任意)
+  notify_subscribers: false
+
+# ----------------------------------------
+# パイプライン全体設定
+# ----------------------------------------
+pipeline:
+  dry_run: false          # true=実際のAPI呼び出しをスキップ
+  skip_existing: true     # 既存ファイルがあればスキップ
+  log_level: "INFO"
+  log_dir: "logs"
+  output_base: "output"
