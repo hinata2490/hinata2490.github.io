@@ -60,13 +60,14 @@
 
 | サービス | 月額 |
 |---|---|
-| Kling Premier | $65（8,000クレジット） |
 | Claude Pro | $22 |
-| CapCut | 無料 |
+| CapCut | 無料（リップシンク含む） |
 | Gemini | 無料 |
 | Envato Elements | 契約中 |
 | Premiere Pro / After Effects | 契約中 |
-| **合計** | **約 $87（約13,000円/月）** |
+| **合計** | **約 $22（約3,300円/月）** |
+
+※ Kling Premier $65 は当初導入予定だったが、CapCutリップシンクで代替可能と判明したため不採用。複雑モーションが必要になった段階で再契約検討。
 
 ## 先行者分析: 美容品の本音（@biyouhin_honne）
 

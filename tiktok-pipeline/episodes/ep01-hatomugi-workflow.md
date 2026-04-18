@@ -105,17 +105,20 @@ Style reference: Pixar's "Cars" or "Toy Story" character design quality.
 
 ---
 
-## STEP 4: Klingでカット動画生成（60〜90分）
+## STEP 4: CapCutで動画化＆リップシンク（30分）
+
+> **注**: 当初Klingで動画生成→Klingでリップシンクの2ステップだったが、Klingリップシンクが「最適区間」しか効かない問題が判明。CapCutで「画像1枚 + 音声 → 動画化 + 全フレーム口パク」を一発でやる方式に変更。
 
 ### やること
 
-各カットの動画（キャラがリアクションしてるシーン）を4本生成。
+各カットの音声 + STEP1のキャラ画像をCapCutに渡してリップシンク動画を生成。
 
 ### 共通設定
 
-- 解像度: **720p**（1080pは240クレジット余分）
-- 長さ: 各カットの音声秒数 + 0秒（余白なし）
-- 開始フレーム: STEP1 で生成したキャラ画像をアップロード
+- 入力1: STEP1 で生成したキャラ画像（グリーンバック・全身）
+- 入力2: STEP2 で生成した音声 mp3
+- CapCut → リップシンク機能 → 「吹替を端末からアップロード」で音声指定
+- カット1はKlingで作成済みのものを使用
 
 ### カット1（10秒）冒頭：ブチ切れ
 
@@ -175,41 +178,23 @@ Style: Pixar 3D animation, swagger to deadpan transition, comedic timing.
 No text, no logos, no labels anywhere.
 ```
 
-### リテイクのコツ
+### Klingプロンプト（参考・カット1のみ使用）
 
-- 動きが地味 → プロンプトに「`exaggerated, snappy, energetic`」を強める
-- ロゴが出ちゃう → 「`no text, no logos anywhere`」追記
-- 背景が白くない → 「`pure solid white background, no gradient, no shadows`」強調
+カット1は既にKlingで作成済み。カット2以降はCapCutに切替済みのため以下プロンプトは使わない（記録用）。
 
----
+旧プロンプトは git 履歴の `522867f` 〜 `888e807` 参照。
 
-## STEP 5: Klingでリップシンク合成（30分）
+### CapCutでのモーション制御
 
-### やること
+CapCutは動画モーションをプロンプト指定できない（自動生成）。代わりに以下で品質コントロール：
 
-STEP4で作った各カット動画 + STEP2の音声をKlingのリップシンク機能で合成。
-
-### 操作手順
-
-Kling管理画面 → リップシンク機能 → 動画とaudioをセット → 生成
-
-### ペアリング
-
-| カット動画 | 音声ファイル |
-|---|---|
-| cut01.mp4 | ep01_voice_01.mp3 |
-| cut02.mp4 | ep01_voice_02.mp3 |
-| cut03.mp4 | ep01_voice_03.mp3 |
-| cut04.mp4 | ep01_voice_04.mp3 |
-
-### チェック
-
-- 口の動きと音声が合ってるか確認
-- ズレてたらリテイク（Kling側で再生成）
+- キャラ画像のポーズが「会話してる感」のあるものを選ぶ
+- 音声の感情起伏が動きに反映される傾向あり
+- 物足りない動きはPremiere側でズーム・カット割りでカバー
 
 ---
 
-## STEP 6: Premiere Proで仕上げ（60〜90分）
+## STEP 5: Premiere Proで仕上げ（60〜90分）
 
 ### プロジェクト設定
 
@@ -291,7 +276,7 @@ Envato Elements で以下キーワードで検索:
 
 ---
 
-## STEP 7: TikTok投稿（10分）
+## STEP 6: TikTok投稿（10分）
 
 → [docs/account-setup.md](../docs/account-setup.md) でアカウント開設済み前提
 
@@ -331,7 +316,7 @@ Envato Elements で以下キーワードで検索:
 | 症状 | 対処 |
 |---|---|
 | Geminiでロゴが消えない | プロンプトに「no text, no logos」を3回入れる→ダメなら参照画像を別アングルに |
-| Klingで動きが弱い | プロンプト「snappy, exaggerated, energetic」追記 |
-| Klingリップシンクで口がズレる | 音声側を1.2倍速→1.1倍速に落として再合成 |
+| CapCutで動きが弱い | キャラ画像のポーズを変える / Premiereでズームで補強 |
+| CapCutリップシンクで口がズレる | 音声側を1.2倍速→1.1倍速に落として再合成 |
 | カットが10秒超える | セリフを削るか、CapCut音声側で速度を上げる |
 | 全部詰まる | カット数を4→3に減らして当日投稿優先 |
