@@ -4,15 +4,18 @@
 
 ## 1. アイコン画像（Geminiで生成）
 
+先行者 @biyouhin_honne のアイコン（複数キャラ集合＋暖色ボケ背景）を参考に、主役＝ep01ハトムギキャラで作る。動画との認知を繋げる狙い。
+
 ### Geminiプロンプト
 
 ```
-A cute 3D Pixar-style cosmetics character icon for a TikTok account.
-A generic cosmetics bottle (no specific brand) with a cute face — big expressive eyes, small mouth slightly open as if talking energetically.
-Pastel pink and cream color palette. Soft round shapes. Glossy 3D rendering.
-Square format (1:1), centered composition, minimal background (soft gradient pink-to-cream).
-The character should look friendly but slightly sassy. No text, no logos, no brand names.
-High quality, professional Pixar-quality 3D render.
+A cute 3D Pixar-style cosmetics character group portrait, TikTok profile icon.
+Main character in the center front: a white cosmetics bottle with purple cap and purple gloves, with an angry sassy expression, hands on hips.
+Behind the main character (slightly blurred), 3-4 other cute cosmetics characters stylized the same way: a small skincare jar, a lipstick tube, a cream tube, a serum dropper bottle — all with cute faces peeking over the main character's shoulders.
+Warm bokeh background with soft golden-pink glow, dreamy cosmetics shop atmosphere.
+Square format (1:1), centered composition, character fills about 70% of the frame.
+No text, no logos, no brand names anywhere.
+High quality Pixar-quality 3D render.
 ```
 
 ### 生成後の調整
@@ -32,27 +35,52 @@ High quality, professional Pixar-quality 3D render.
 - `cosme.no.jijou`
 - `cosmenojijou_official`
 
-## 3. プロフィール文（80文字以内）
+## 3. プロフィール文
 
-### メイン案
+**方針: AIは書かない。** 先行者 @biyouhin_honne もプロフィールでAI表記なし。動画投稿時の「AI生成コンテンツ」ラベルON だけで法務対応は十分。プロフィールに書くと逆に身構えられて離脱率上がる懸念あり。
 
-```
-コスメが本音でキレる場所｜使い方の勘違い・宣伝の裏側を擬人化が暴露｜週5本｜AI生成
-```
-
-（67文字）
-
-### 予備案A（柔らかめ）
+### メイン推奨
 
 ```
-化粧品たちの本音、聞いてみない？｜擬人化コスメが使い方を解説｜週5本投稿｜#美容
+💄コスメたちの本音💢
+使い方間違えると全員ブチギレます
+正しい使い方・宣伝の裏側を暴露
+📩お仕事のご依頼はDMまで
 ```
 
-### 予備案B（攻めめ）
+### 予備A（より攻めめ）
 
 ```
-あなたの肌、化粧品が泣いてるかも｜擬人化コスメが使い方を本気で叱る｜週5｜AI
+💢コスメが本音でキレる場所💢
+「その使い方、間違ってるから」
+週5本で使い方・買い物の勘違いを暴露
+📩お仕事DMどうぞ
 ```
+
+### 予備B（柔らかめ）
+
+```
+💄化粧品たちの本音、聞いてみない？
+擬人化コスメが使い方を解説します
+週5本投稿予定📅
+📩お仕事DM受付中
+```
+
+### 予備C（短め・シャープ）
+
+```
+💢コスメがブチギレ解説💢
+使い方の勘違い・宣伝の裏側
+週5本｜📩お仕事DM
+```
+
+## AI表記の方針（まとめ）
+
+| 場所 | AI表記 |
+|---|---|
+| 動画投稿時のラベル | **ON（必須）** - TikTok規約 |
+| プロフィール文 | **書かない** - 先行者踏襲 |
+| ハッシュタグ | **入れない** |
 
 ## 4. ヘッダー画像（任意・後回し可）
 
