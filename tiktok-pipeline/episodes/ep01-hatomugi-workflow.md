@@ -134,11 +134,11 @@ Style: Pixar 3D animation, exaggerated motion, snappy timing.
 セリフ: 「摩擦でシミとくすみ増えてんの、俺のせいにすんなよ／あとさ、量。ケチんなって。500円玉って書いてあんだろ。」
 
 ```
-The cosmetics bottle character expresses two emotions in sequence: tired exasperation, then frustrated lecturing.
-Frame 1-3 sec: Character holds head with one hand and waves the other in a "don't blame me" gesture, eyebrows raised in exasperation.
-Frame 4-6 sec: Character points firmly at the camera with one finger, accusing tone, mouth moving energetically.
-Frame 7-10 sec: Character forms a circle with thumb and index finger (like showing a coin size), holds it up beside the face, eyes wide and stern as if saying "this much!".
-Camera: static, medium shot, character centered, full body visible from waist up.
+The white cosmetics bottle character (full body, head to toe visible) expresses two emotions in sequence: tired exasperation, then frustrated lecturing.
+Frame 1-3 sec: Character throws both purple-gloved hands up to the sides in a "don't blame me!" gesture, leaning back slightly, eyebrows raised in exasperation.
+Frame 4-6 sec: Character points firmly at the camera with one hand, the other on its side, mouth moving energetically as if scolding.
+Frame 7-10 sec: Character holds both hands up in front of its body, forming a circle with both hands together (like showing a coin size), eyes wide and stern.
+Camera: static, full body shot, character centered, head to toe always visible.
 Keep the existing green screen background unchanged.
 Style: Pixar 3D animation, snappy and exaggerated motion, clear emotional transitions.
 No text, no logos, no labels anywhere.
@@ -149,12 +149,12 @@ No text, no logos, no labels anywhere.
 セリフ: 「いいか、正しくは手のひらに出して、顔を包み込む。叩くんじゃなくて押す。」
 
 ```
-The cosmetics bottle character calmly demonstrates the correct application technique.
-Frame 1-2 sec: Character holds out one open palm in front, looking down at it as if pouring lotion onto it.
-Frame 3-4 sec: Character brings both hands up to the face and gently presses palms against cheeks (covering the face softly).
-Frame 5-6 sec: Character mimes a quick patting motion with both hands, then immediately makes an X with arms (rejection gesture).
-Frame 6-7 sec: Character slowly presses both palms inward toward the face, demonstrating the "press" motion, with a satisfied nod.
-Camera: static, medium shot, character centered, hands and face clearly visible.
+The white cosmetics bottle character (full body, head to toe visible) calmly demonstrates the correct application technique.
+Frame 1-2 sec: Character holds out one purple-gloved palm flat in front of its body, looking down at it as if pouring lotion onto it.
+Frame 3-4 sec: Character brings both hands up in front of its face, palms facing inward (miming the "wrap the face" gesture in front of itself, not actually touching the face).
+Frame 5-6 sec: Character mimes a quick patting motion with both hands in the air, then immediately makes a big X with both arms across the body (rejection gesture).
+Frame 6-7 sec: Character slowly pushes both palms forward in a "press" motion, with a satisfied nod.
+Camera: static, full body shot, character centered, head to toe always visible.
 Keep the existing green screen background unchanged.
 Style: Pixar 3D animation, calm teaching mode, clear and deliberate movements.
 No text, no logos, no labels anywhere.
@@ -165,11 +165,11 @@ No text, no logos, no labels anywhere.
 セリフ: 「700円で500ml入ってんだぞ？破格だろ。せめて使い方くらいまともにしてくれ」
 
 ```
-The cosmetics bottle character boasts proudly, then drops into deadpan exasperation.
-Frame 1-3 sec: Character strikes a confident hero pose, hands on hips, chest puffed out, smug confident smile.
-Frame 4-5 sec: Character spreads arms wide as if presenting itself to the world, slight bow with a "behold!" gesture.
-Frame 6-8 sec: Character drops the smile completely, lowers arms, gives a flat unimpressed half-lidded stare directly at the camera with a slow head shake.
-Camera: static, medium shot, character centered, full body visible from waist up.
+The white cosmetics bottle character (full body, head to toe visible) boasts proudly, then drops into deadpan exasperation.
+Frame 1-3 sec: Character strikes a confident hero pose, both purple-gloved hands on its sides like hands-on-hips, chest puffed out, smug confident smile.
+Frame 4-5 sec: Character spreads both arms wide open to the sides, presenting itself like "ta-da!", a slight bow forward.
+Frame 6-8 sec: Character drops the smile completely, lowers arms to its sides, gives a flat unimpressed half-lidded stare directly at the camera with a slow head shake.
+Camera: static, full body shot, character centered, head to toe always visible.
 Keep the existing green screen background unchanged.
 Style: Pixar 3D animation, swagger to deadpan transition, comedic timing.
 No text, no logos, no labels anywhere.
