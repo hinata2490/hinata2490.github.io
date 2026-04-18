@@ -61,7 +61,7 @@
 | サービス | 月額 |
 |---|---|
 | Claude Pro | $22 |
-| CapCut | 無料（リップシンク含む） |
+| CapCut | 通常機能は無料。リップシンク等のAI機能は別途クレジット課金（Klingより安い） |
 | Gemini | 無料 |
 | Envato Elements | 契約中 |
 | Premiere Pro / After Effects | 契約中 |
