@@ -139,7 +139,7 @@ Frame 1-3 sec: Character holds head with one hand and waves the other in a "don'
 Frame 4-6 sec: Character points firmly at the camera with one finger, accusing tone, mouth moving energetically.
 Frame 7-10 sec: Character forms a circle with thumb and index finger (like showing a coin size), holds it up beside the face, eyes wide and stern as if saying "this much!".
 Camera: static, medium shot, character centered, full body visible from waist up.
-Background: pure solid white #FFFFFF, no shadows touching edges.
+Keep the existing green screen background unchanged.
 Style: Pixar 3D animation, snappy and exaggerated motion, clear emotional transitions.
 No text, no logos, no labels anywhere.
 ```
@@ -155,7 +155,7 @@ Frame 3-4 sec: Character brings both hands up to the face and gently presses pal
 Frame 5-6 sec: Character mimes a quick patting motion with both hands, then immediately makes an X with arms (rejection gesture).
 Frame 6-7 sec: Character slowly presses both palms inward toward the face, demonstrating the "press" motion, with a satisfied nod.
 Camera: static, medium shot, character centered, hands and face clearly visible.
-Background: pure solid white #FFFFFF.
+Keep the existing green screen background unchanged.
 Style: Pixar 3D animation, calm teaching mode, clear and deliberate movements.
 No text, no logos, no labels anywhere.
 ```
@@ -170,7 +170,7 @@ Frame 1-3 sec: Character strikes a confident hero pose, hands on hips, chest puf
 Frame 4-5 sec: Character spreads arms wide as if presenting itself to the world, slight bow with a "behold!" gesture.
 Frame 6-8 sec: Character drops the smile completely, lowers arms, gives a flat unimpressed half-lidded stare directly at the camera with a slow head shake.
 Camera: static, medium shot, character centered, full body visible from waist up.
-Background: pure solid white #FFFFFF.
+Keep the existing green screen background unchanged.
 Style: Pixar 3D animation, swagger to deadpan transition, comedic timing.
 No text, no logos, no labels anywhere.
 ```
