@@ -129,40 +129,50 @@ Background: pure white.
 Style: Pixar 3D animation, exaggerated motion, snappy timing.
 ```
 
-### カット2（8秒）呆れ：怒りから呆れに転調
+### カット2（約9〜10秒）摩擦の指摘 → ケチるな
+
+セリフ: 「摩擦でシミとくすみ増えてんの、俺のせいにすんなよ／あとさ、量。ケチんなって。500円玉って書いてあんだろ。」
 
 ```
-The cosmetics bottle character starts furious, then sighs in exhaustion.
-Frame 1-3 sec: Character shakes head while waving hands in front.
-Frame 4-6 sec: Character covers face with both hands ("oh my god" pose).
-Frame 7-8 sec: Character points slowly at the viewer with tired expression.
-Camera: static, medium shot, character centered.
-Background: pure white.
-Style: Pixar 3D animation, expressive, tired exasperation.
+The cosmetics bottle character expresses two emotions in sequence: tired exasperation, then frustrated lecturing.
+Frame 1-3 sec: Character holds head with one hand and waves the other in a "don't blame me" gesture, eyebrows raised in exasperation.
+Frame 4-6 sec: Character points firmly at the camera with one finger, accusing tone, mouth moving energetically.
+Frame 7-10 sec: Character forms a circle with thumb and index finger (like showing a coin size), holds it up beside the face, eyes wide and stern as if saying "this much!".
+Camera: static, medium shot, character centered, full body visible from waist up.
+Background: pure solid white #FFFFFF, no shadows touching edges.
+Style: Pixar 3D animation, snappy and exaggerated motion, clear emotional transitions.
+No text, no logos, no labels anywhere.
 ```
 
-### カット3（7秒）解説：落ち着いて教える
+### カット3（約7秒）正しい使い方の実演
+
+セリフ: 「いいか、正しくは手のひらに出して、顔を包み込む。叩くんじゃなくて押す。」
 
 ```
-The cosmetics bottle character calms down and explains carefully.
-Frame 1-3 sec: Character holds up an open palm and demonstrates "place gently".
-Frame 4-5 sec: Character mimes covering face with both hands gently (as if applying lotion).
-Frame 6-7 sec: Character nods firmly, satisfied.
-Camera: static, medium shot.
-Background: pure white.
-Style: Pixar 3D animation, calm but slightly stern teacher mode.
+The cosmetics bottle character calmly demonstrates the correct application technique.
+Frame 1-2 sec: Character holds out one open palm in front, looking down at it as if pouring lotion onto it.
+Frame 3-4 sec: Character brings both hands up to the face and gently presses palms against cheeks (covering the face softly).
+Frame 5-6 sec: Character mimes a quick patting motion with both hands, then immediately makes an X with arms (rejection gesture).
+Frame 6-7 sec: Character slowly presses both palms inward toward the face, demonstrating the "press" motion, with a satisfied nod.
+Camera: static, medium shot, character centered, hands and face clearly visible.
+Background: pure solid white #FFFFFF.
+Style: Pixar 3D animation, calm teaching mode, clear and deliberate movements.
+No text, no logos, no labels anywhere.
 ```
 
-### カット4（7秒）誇り→言い切り：ドヤ→トドメ
+### カット4（約8秒）コスパ自慢 → 締めの呆れ
+
+セリフ: 「700円で500ml入ってんだぞ？破格だろ。せめて使い方くらいまともにしてくれ」
 
 ```
-The cosmetics bottle character poses with pride, then deadpan stare.
-Frame 1-3 sec: Character strikes a confident hero pose, hands on hips, chest puffed out.
-Frame 4-5 sec: Character winks and gives a thumbs up.
-Frame 6-7 sec: Character drops the smile, gives a flat unimpressed stare directly at the camera.
-Camera: static, full body shot.
-Background: pure white.
-Style: Pixar 3D animation, swagger to deadpan transition.
+The cosmetics bottle character boasts proudly, then drops into deadpan exasperation.
+Frame 1-3 sec: Character strikes a confident hero pose, hands on hips, chest puffed out, smug confident smile.
+Frame 4-5 sec: Character spreads arms wide as if presenting itself to the world, slight bow with a "behold!" gesture.
+Frame 6-8 sec: Character drops the smile completely, lowers arms, gives a flat unimpressed half-lidded stare directly at the camera with a slow head shake.
+Camera: static, medium shot, character centered, full body visible from waist up.
+Background: pure solid white #FFFFFF.
+Style: Pixar 3D animation, swagger to deadpan transition, comedic timing.
+No text, no logos, no labels anywhere.
 ```
 
 ### リテイクのコツ
