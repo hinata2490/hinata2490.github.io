@@ -14,6 +14,7 @@
 - [docs/strategy.md](docs/strategy.md) - 戦略（収益・競合・差別化・ロジック）
 - [docs/production.md](docs/production.md) - 制作（仕様・ワークフロー・Kling運用・法務）
 - [docs/account-setup.md](docs/account-setup.md) - アカウント開設手順
+- [docs/shadowban-incident.md](docs/shadowban-incident.md) - **ep01投稿後0再生の原因分析と対策（必読）**
 - [episodes/ep01-hatomugi.md](episodes/ep01-hatomugi.md) - 1本目: 台本とチェックリスト
 - [episodes/ep01-hatomugi-workflow.md](episodes/ep01-hatomugi-workflow.md) - **1本目: 制作ワークフロー（コピペ実行用）**
 
