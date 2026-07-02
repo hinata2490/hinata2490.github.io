@@ -53,6 +53,9 @@ const DINNER_RICE = { kcal: 390, protein: 6 };   // ご飯250g(炊き上がり)
 const SOUP = { kcal: 40, protein: 2, price: 40 }; // 買う味噌汁/スープ(鍋・汁物レシピの日は不要)
 const DAILY_BUDGET = 1183;                        // 月35,500円 ÷ 30日
 const PROTEIN_TARGET = [90, 120];                 // 1日タンパク質目標(g)
+// 1日カロリー目標。維持カロリー(169cm/62kg・軽い活動)は約2,100〜2,200kcal。
+// 筋肉を残して体脂肪を減らすには「引きすぎない」赤字(-300〜-500kcal)が正解。
+const KCAL_TARGET = { train: [1700, 1900], rest: [1550, 1750] };
 
 /* ==================== 夕食レシピ(100件) ====================
    kcal / p(タンパク質g) / price(円) は「おかず部分のみ」。
@@ -546,6 +549,34 @@ function todayMeals() {
   return state.meals[tk];
 }
 
+// 今日が筋トレ日かどうか(記録済み or 今日やる予定)
+function isTrainDay() {
+  if (state.workouts[todayKey()]) return true;
+  const adv = todayWorkoutAdvice();
+  return !!adv.menu;
+}
+
+// カロリー目標との比較と、不足時の具体的な足し方
+function kcalAdvice(tot) {
+  const train = isTrainDay();
+  const range = train ? KCAL_TARGET.train : KCAL_TARGET.rest;
+  const dayLabel = train ? '筋トレ日' : '休養日';
+  let mark = '✅', hint = '';
+  if (tot.kcal < range[0]) {
+    mark = '⚠️';
+    const need = range[0] - tot.kcal;
+    const adds = [];
+    if (need >= 70) adds.push('夕食のご飯を250→300g(+78kcal)');
+    if (need >= 140) adds.push('卵1個か納豆1P(+76〜80kcal)');
+    if (need >= 220) adds.push('バナナもう1本(+90kcal)');
+    hint = `<br>→ あと${need}kcal:${adds.join('、')} で埋めるのがおすすめ(少なすぎると筋肉が増えない)`;
+  } else if (tot.kcal > range[1] + 150) {
+    mark = '⚠️';
+    hint = '<br>→ 今日はやや多め。気にするほどではないが、続く場合は夕食を軽めのレシピに';
+  }
+  return { range, dayLabel, mark, hint };
+}
+
 /* ==================== 描画 ==================== */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -608,8 +639,10 @@ function renderToday() {
   const pHint = gap > 0
     ? `<br>→ あと${gap}g:納豆1P(+8g/40円)や卵1個(+6g/35円)、冷奴150g(+8g/30円)を足せば届く`
     : '';
+  const kc = kcalAdvice(tot);
   $('today-nutrition-summary').innerHTML =
-    `今日の予定合計:約 <b>${tot.kcal}kcal</b> / タンパク質 <b>${tot.protein}g</b> ${pMark}(目標 ${pLow}〜${pHigh}g)${pHint}<br>` +
+    `今日の予定合計:約 <b>${tot.kcal}kcal</b> ${kc.mark}(${kc.dayLabel}の目安 ${kc.range[0]}〜${kc.range[1]}kcal)${kc.hint}<br>` +
+    `タンパク質 <b>${tot.protein}g</b> ${pMark}(目標 ${pLow}〜${pHigh}g)${pHint}<br>` +
     `食費目安:約 <b>${tot.price}円</b>(予算 ${DAILY_BUDGET}円/日・米代別)`;
 
   // 今日の夕食カード
@@ -846,9 +879,11 @@ function botReply(text) {
     return `全セットを目標回数こなせた状態が2回続くと、次回の目標が自動で+1されます(記録さえすればOK)。\nそれでも物足りない場合の優先順位:\n①動きをゆっくりにする(下ろし3秒)…一番効きます\n②チューブを1段重くする(ローイングは13.6kgで既に上限。プレス系は肩に違和感がなければ9.1→11.4kg)\n③セットを2→3に増やす\n回数を無限に増やすより、①②の方が引き締め効率が良いです。`;
   }
 
-  if (has('タンパク質', 'たんぱく', 'カロリー', '栄養', '足りてる')) {
-    const mark = tot.protein >= PROTEIN_TARGET[0] ? '→ 目標クリア✅' : '→ やや不足⚠️';
-    return `今日の予定(朝食+プロテイン+バナナ+夕食「${todayRecipe().n}」)の合計:\n・約${tot.kcal}kcal\n・タンパク質 約${tot.protein}g ${mark}(目標90〜120g)\n\n不足気味の日の足し方(安い順):\n・納豆1パック +8g(約40円)\n・卵1個 +6g(約35円)\n・冷奴150g +8g(約30円)\n多少120gを超える日があっても問題ありません。`;
+  if (has('タンパク質', 'たんぱく', 'カロリー', '栄養', '足りてる', '少なく', '少ない')) {
+    const kc = kcalAdvice(tot);
+    const kMark = tot.kcal >= kc.range[0] ? '→ OK✅' : `→ あと${kc.range[0] - tot.kcal}kcal足りない⚠️`;
+    const pMark2 = tot.protein >= PROTEIN_TARGET[0] ? '→ 目標クリア✅' : '→ やや不足⚠️';
+    return `今日の予定(朝食+プロテイン+バナナ+夕食「${todayRecipe().n}」)の合計:\n・約${tot.kcal}kcal ${kMark}(${kc.dayLabel}の目安 ${kc.range[0]}〜${kc.range[1]}kcal)\n・タンパク質 約${tot.protein}g ${pMark2}(目標90〜120g)\n\n維持カロリーは約2,100〜2,200kcalなので、目安レンジは「筋肉を残しながら脂肪を減らす」ためのゆるい赤字(-300〜-500kcal)です。これより大きく削ると筋肉ごと落ちて「シュッと」ではなく「やつれ」になります。\n\n足りない日の埋め方:\n・夕食のご飯250→300g(+78kcal)\n・卵1個 +76kcal/P6g(約35円)\n・納豆1P +80kcal/P8g(約40円)\n・バナナもう1本 +90kcal(約40円)`;
   }
 
   if (has('安', '節約', '予算', '食費', '高い')) {
