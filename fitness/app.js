@@ -7,36 +7,110 @@
 'use strict';
 
 /* ==================== 筋トレメニュー定義 ==================== */
-// base: 開始目安回数(片側種目は片側あたり)、cap: 自動進行の上限
+// 各種目は3段階のレベル制。
+// base: 開始目安回数(片側種目は片側あたり)、cap: このレベルでの上限
 // step: 1回の進行で増やす量(省略時1)
+// 進行:達成のたびに +step → cap到達後は 2→3セット → 3セットも達成でレベルアップ
 const WORKOUTS = {
   A: [
-    { id: 'a1', name: '椅子スクワット', sets: 2, base: 10, cap: 15, unit: '回',
-      tip: '椅子にお尻が触れたら立つ。膝はつま先と同じ向き。ゆっくり3秒で下ろす。' },
-    { id: 'a2', name: '斜め腕立て伏せ', sets: 2, base: 6, cap: 15, unit: '回',
-      tip: '机やテーブルの縁に手をつく。体は一直線、胸を縁に近づける。' },
-    { id: 'a3', name: 'チューブローイング', sets: 2, base: 10, cap: 15, unit: '回',
-      tip: 'チューブ13.6kgでOK(フォームが崩れなければ)。肩をすくめず、肘を後ろへ引く。' },
-    { id: 'a4', name: 'ヒップリフト', sets: 2, base: 10, cap: 15, unit: '回',
-      tip: '仰向けで膝を立て、お尻を締めながら持ち上げて1秒キープ。腰を反らさない。' },
-    { id: 'a5', name: 'デッドバグ', sets: 2, base: 5, cap: 10, unit: '回', perSide: true,
-      tip: '仰向けで対角の手足をゆっくり伸ばす。腰と床のすき間を作らない。' },
-    { id: 'a6', name: 'その場足踏み', sets: 2, base: 60, cap: 120, unit: '秒', step: 15,
-      tip: '腿を軽く上げてリズムよく。仕上げの有酸素。呼吸が少し弾む程度。' },
+    { id: 'a1', unit: '回', sets: 2, levels: [
+      { name: '椅子スクワット', base: 10, cap: 15,
+        tip: '椅子にお尻が触れたら立つ。膝はつま先と同じ向き。ゆっくり3秒で下ろす。' },
+      { name: 'スクワット(椅子なし)', base: 10, cap: 15,
+        tip: '太ももが床と平行になるまで深く。3秒で下ろして1秒で立つ。膝はつま先と同じ向き。' },
+      { name: 'リュック・スクワット', base: 8, cap: 15,
+        tip: 'リュックに水や本(3〜6kg)を入れて背負う。深さとテンポはLv2と同じ。' },
+    ] },
+    { id: 'a2', unit: '回', sets: 2, levels: [
+      { name: '斜め腕立て伏せ', base: 6, cap: 15,
+        tip: '机やテーブルの縁に手をつく。体は一直線、胸を縁に近づける。' },
+      { name: '膝つき腕立て伏せ', base: 6, cap: 15,
+        tip: '床で膝をつき、膝から頭まで一直線。胸が床に近づくまで下ろす。' },
+      { name: '腕立て伏せ(床)', base: 5, cap: 15,
+        tip: 'つま先立ちで体一直線。下ろしに2秒かける。腰が落ちたらそのセット終了。' },
+    ] },
+    { id: 'a3', unit: '回', sets: 2, levels: [
+      { name: 'チューブローイング', base: 10, cap: 15,
+        tip: 'チューブ13.6kgでOK(フォームが崩れなければ)。肩をすくめず、肘を後ろへ引く。' },
+      { name: 'チューブローイング(短め持ち)', base: 8, cap: 15,
+        tip: 'チューブを普段より20cm短く持って強度アップ。引き切って1秒止める。' },
+      { name: 'スローローイング', base: 8, cap: 12,
+        tip: '短め持ちのまま、3秒で引いて3秒で戻す。背中に効く感覚を最優先。' },
+    ] },
+    { id: 'a4', unit: '回', sets: 2, levels: [
+      { name: 'ヒップリフト', base: 10, cap: 15,
+        tip: '仰向けで膝を立て、お尻を締めながら持ち上げて1秒キープ。腰を反らさない。' },
+      { name: 'リュック・ヒップリフト', base: 10, cap: 15,
+        tip: 'リュック(3〜6kg)を骨盤の上に乗せて行う。上で2秒キープ。' },
+      { name: '片足ヒップリフト', base: 5, cap: 10, perSide: true,
+        tip: '片足を浮かせたまま持ち上げる。骨盤が傾かないように。左右各でカウント。' },
+    ] },
+    { id: 'a5', unit: '回', sets: 2, levels: [
+      { name: 'デッドバグ', base: 5, cap: 10, perSide: true,
+        tip: '仰向けで対角の手足をゆっくり伸ばす。腰と床のすき間を作らない。' },
+      { name: 'スローデッドバグ', base: 5, cap: 10, perSide: true,
+        tip: '伸ばすのに3秒、戻すのに3秒。伸ばし切った位置で1秒止める。' },
+      { name: 'デッドバグ(かかとタッチ)', base: 5, cap: 10, perSide: true,
+        tip: '伸ばした足のかかとを床すれすれで1秒キープしてから戻す。腰が浮いたら終了。' },
+    ] },
+    { id: 'a6', unit: '秒', sets: 2, step: 15, levels: [
+      { name: 'その場足踏み', base: 60, cap: 120,
+        tip: '腿を軽く上げてリズムよく。仕上げの有酸素。呼吸が少し弾む程度。' },
+      { name: 'ハイニー足踏み', base: 60, cap: 120,
+        tip: '腿を腰の高さまで上げる。背筋を伸ばし、テンポは1秒2歩。' },
+      { name: 'その場ジョギング', base: 60, cap: 180,
+        tip: '軽く弾みながらその場で走る。着地は静かに、つま先で。' },
+    ] },
   ],
   B: [
-    { id: 'b1', name: 'リュック・デッドリフト', sets: 2, base: 8, cap: 12, unit: '回',
-      tip: 'リュックに本や水を入れて重りに。背中は丸めず、お尻を後ろに引いて持ち上げる。' },
-    { id: 'b2', name: 'チューブ・チェストプレス', sets: 2, base: 8, cap: 15, unit: '回',
-      tip: '6.8〜9.1kgから。肩がすくむ・肩の前が張る場合は1段軽く。胸で押す意識。' },
-    { id: 'b3', name: 'チューブ・ラットプルダウン', sets: 2, base: 10, cap: 15, unit: '回',
-      tip: '6.8〜9.1kgから。肘を脇腹に引き寄せる。首をすくめない。' },
-    { id: 'b4', name: 'ステップアップ', sets: 2, base: 6, cap: 12, unit: '回', perSide: true,
-      tip: '段差や低い台に片足で上がる。上げた足の力だけで上がる。左右交互ではなく片側ずつ。' },
-    { id: 'b5', name: 'バードドッグ', sets: 2, base: 5, cap: 10, unit: '回', perSide: true,
-      tip: '四つ這いで対角の手足を伸ばして2秒キープ。腰を反らさず、体を水平に保つ。' },
-    { id: 'b6', name: 'その場足踏み', sets: 2, base: 60, cap: 120, unit: '秒', step: 15,
-      tip: '腿を軽く上げてリズムよく。仕上げの有酸素。' },
+    { id: 'b1', unit: '回', sets: 2, levels: [
+      { name: 'リュック・デッドリフト', base: 8, cap: 12,
+        tip: 'リュックに本や水を入れて重りに(3〜5kg)。背中は丸めず、お尻を後ろに引いて持ち上げる。' },
+      { name: 'リュック・デッドリフト(増量)', base: 8, cap: 12,
+        tip: '中身を6〜8kgに増やす(2Lペットボトル3〜4本)。フォームが最優先。' },
+      { name: '片足ルーマニアンデッドリフト', base: 5, cap: 10, perSide: true,
+        tip: '片足立ちでリュックを持ち、お尻を後ろに引きながら上体を倒す。ふらつくなら壁に指1本。' },
+    ] },
+    { id: 'b2', unit: '回', sets: 2, levels: [
+      { name: 'チューブ・チェストプレス', base: 8, cap: 15,
+        tip: '6.8〜9.1kgから。肩がすくむ・肩の前が張る場合は1段軽く。胸で押す意識。' },
+      { name: 'チェストプレス(1段重く)', base: 8, cap: 15,
+        tip: 'チューブを1段上げる(9.1→11.4kg)。肩に違和感が出たら即戻す。' },
+      { name: 'スローチェストプレス', base: 8, cap: 12,
+        tip: '重いチューブのまま、2秒で押して3秒で戻す。胸に効く感覚を最優先。' },
+    ] },
+    { id: 'b3', unit: '回', sets: 2, levels: [
+      { name: 'チューブ・ラットプルダウン', base: 10, cap: 15,
+        tip: '6.8〜9.1kgから。肘を脇腹に引き寄せる。首をすくめない。' },
+      { name: 'ラットプルダウン(1段重く)', base: 8, cap: 15,
+        tip: 'チューブを1段上げる(9.1→11.4kg)。「肘で引く」感覚が消えたら重すぎ。' },
+      { name: 'スローラットプルダウン', base: 8, cap: 12,
+        tip: '重いチューブのまま、2秒で引いて3秒で戻す。背中の外側に効けば正解。' },
+    ] },
+    { id: 'b4', unit: '回', sets: 2, levels: [
+      { name: 'ステップアップ', base: 6, cap: 12, perSide: true,
+        tip: '段差や低い台に片足で上がる。上げた足の力だけで上がる。左右交互ではなく片側ずつ。' },
+      { name: 'リュック・ステップアップ', base: 6, cap: 12, perSide: true,
+        tip: 'リュック(3〜6kg)を背負って行う。上がるとき反動を使わない。' },
+      { name: 'スローステップアップ', base: 6, cap: 10, perSide: true,
+        tip: 'リュックのまま、3秒かけて上がり3秒かけて下りる。膝がぐらつかないように。' },
+    ] },
+    { id: 'b5', unit: '回', sets: 2, levels: [
+      { name: 'バードドッグ', base: 5, cap: 10, perSide: true,
+        tip: '四つ這いで対角の手足を伸ばして2秒キープ。腰を反らさず、体を水平に保つ。' },
+      { name: 'スローバードドッグ', base: 5, cap: 10, perSide: true,
+        tip: '伸ばし切った位置で4秒キープ。コップを背中に乗せてもこぼれない安定感で。' },
+      { name: 'バードドッグ(肘膝タッチ)', base: 5, cap: 10, perSide: true,
+        tip: '伸ばす→体の下で肘と膝をタッチ→また伸ばす、で1回。背中を丸めすぎない。' },
+    ] },
+    { id: 'b6', unit: '秒', sets: 2, step: 15, levels: [
+      { name: 'その場足踏み', base: 60, cap: 120,
+        tip: '腿を軽く上げてリズムよく。仕上げの有酸素。' },
+      { name: 'ハイニー足踏み', base: 60, cap: 120,
+        tip: '腿を腰の高さまで上げる。背筋を伸ばし、テンポは1秒2歩。' },
+      { name: 'その場ジョギング', base: 60, cap: 180,
+        tip: '軽く弾みながらその場で走る。着地は静かに、つま先で。' },
+    ] },
   ],
 };
 
@@ -435,14 +509,28 @@ function thisWeekKeys() {
 }
 
 /* ==================== 筋トレロジック ==================== */
-function exTarget(ex) {
-  const p = state.prog[ex.id];
-  return p ? p.target : ex.base;
+// 進行状態: state.prog[exId] = { lvl, target, sets }
+// 旧形式({target, streak}のみ)はLv1・2セットとして読む
+function exProg(ex) {
+  const p = state.prog[ex.id] || {};
+  const lvl = Math.min(p.lvl || 0, ex.levels.length - 1);
+  const lv = ex.levels[lvl];
+  return {
+    lvl,
+    lv,
+    target: p.target != null ? Math.min(p.target, lv.cap) : lv.base,
+    sets: p.sets || ex.sets,
+  };
 }
+function exTarget(ex) { return exProg(ex).target; }
 function targetLabel(ex) {
-  const t = exTarget(ex);
-  const side = ex.perSide ? '左右各' : '';
-  return `${side}${t}${ex.unit} × ${ex.sets}セット`;
+  const p = exProg(ex);
+  const side = p.lv.perSide ? '左右各' : '';
+  return `${side}${p.target}${ex.unit} × ${p.sets}セット`;
+}
+function exName(ex) {
+  const p = exProg(ex);
+  return p.lvl > 0 ? `${p.lv.name}(Lv${p.lvl + 1})` : p.lv.name;
 }
 
 // 直近の筋トレ記録(今日を除く)
@@ -483,25 +571,36 @@ function todayWorkoutAdvice() {
   return { title: `今日は筋トレ日:メニュー${menu}`, sub: `週${count}/3回。15〜20分、終了時に「あと3回できそう」くらいで切り上げる。`, menu };
 }
 
-// 進行判定:全セット目標達成を2回連続 → 目標+1(上限あり)
+// 進行判定:全セットで目標達成するたびに1段階進む(1回の記録で1段階まで)
+//   ① 回数 +step(レベル内の上限まで)
+//   ② 上限に達したら 2→3セット
+//   ③ 3セットでも達成したら次のレベルの種目へ(回数・セットはリセット)
+// 達成できなかった日は現状維持(下がりはしない)。フォームが崩れる場合は手動で軽くしてOK。
 function applyProgression(menu, results) {
   const notes = [];
   for (const ex of WORKOUTS[menu]) {
     const sets = results[ex.id];
     if (!sets || sets.every(v => v === 0)) continue;
-    const p = state.prog[ex.id] || { target: ex.base, streak: 0 };
-    const hit = sets.length >= ex.sets && sets.every(v => v >= p.target);
-    if (hit) {
-      p.streak += 1;
-      if (p.streak >= 2 && p.target < ex.cap) {
-        p.target += (ex.step || 1);
-        p.streak = 0;
-        notes.push(`${ex.name}:次回から ${p.target}${ex.unit} に少しアップ(フォームが崩れたら戻してOK)`);
-      }
+    const p = exProg(ex);
+    const done = sets.filter(v => v > 0);
+    const hit = done.length >= p.sets && done.every(v => v >= p.target);
+    if (!hit) continue;
+    const step = ex.step || 1;
+    let next = { lvl: p.lvl, target: p.target, sets: p.sets };
+    if (p.target < p.lv.cap) {
+      next.target = Math.min(p.target + step, p.lv.cap);
+      notes.push(`${p.lv.name}:次回から ${next.target}${ex.unit} にアップ(フォームが崩れたら戻してOK)`);
+    } else if (p.sets < 3) {
+      next.sets = 3;
+      notes.push(`${p.lv.name}:上限到達!次回から 3セット に挑戦`);
+    } else if (p.lvl < ex.levels.length - 1) {
+      const nl = ex.levels[p.lvl + 1];
+      next = { lvl: p.lvl + 1, target: nl.base, sets: ex.sets };
+      notes.push(`🎉 レベルアップ!「${p.lv.name}」を卒業 → 次回から「${nl.name}」(${nl.base}${ex.unit}×${ex.sets}セット)`);
     } else {
-      p.streak = 0;
+      notes.push(`${p.lv.name}:最終レベルを完全制覇!ここまで来たらチャットで次の相談を`);
     }
-    state.prog[ex.id] = p;
+    state.prog[ex.id] = next;
   }
   return notes;
 }
@@ -723,8 +822,9 @@ function renderWorkout() {
       <div class="workout-done-banner">✅ 今日の筋トレ(メニュー${doneToday.menu})は記録済み</div>` +
       WORKOUTS[doneToday.menu].map(ex => {
         const sets = doneToday.results[ex.id] || [];
+        const nm = (doneToday.names && doneToday.names[ex.id]) || exName(ex);
         return `<div class="card exercise-card">
-          <div class="ex-head"><span class="ex-name">${esc(ex.name)}</span>
+          <div class="ex-head"><span class="ex-name">${esc(nm)}</span>
           <span class="ex-target">${sets.map(v => v + ex.unit).join(' / ') || '未実施'}</span></div>
         </div>`;
       }).join('');
@@ -734,21 +834,22 @@ function renderWorkout() {
   $('workout-save-btn').classList.remove('hidden');
 
   $('exercise-list').innerHTML = WORKOUTS[menu].map(ex => {
-    const t = exTarget(ex);
-    if (!draft[ex.id]) draft[ex.id] = Array(ex.sets).fill(0);
+    const p = exProg(ex);
+    if (!draft[ex.id]) draft[ex.id] = Array(p.sets).fill(0);
     const rows = draft[ex.id].map((v, i) => `
       <div class="set-row">
         <span class="set-label">セット${i + 1}</span>
         <div class="stepper">
           <button onclick="app.bump('${ex.id}',${i},-1)">−</button>
-          <div class="num ${v === 0 ? 'zero' : ''}">${v === 0 ? `未 <small>(目標${t}${ex.unit})</small>` : v + ex.unit}</div>
+          <div class="num ${v === 0 ? 'zero' : ''}">${v === 0 ? `未 <small>(目標${p.target}${ex.unit})</small>` : v + ex.unit}</div>
           <button onclick="app.bump('${ex.id}',${i},1)">+</button>
         </div>
       </div>`).join('');
     return `<div class="card exercise-card">
-      <div class="ex-head"><span class="ex-name">${esc(ex.name)}</span>
+      <div class="ex-head"><span class="ex-name">${esc(p.lv.name)}</span>
+        ${p.lvl > 0 ? `<span class="badge orange">Lv${p.lvl + 1}</span>` : ''}
         <span class="ex-target">目標 ${targetLabel(ex)}</span></div>
-      <div class="ex-tip">${esc(ex.tip)}</div>
+      <div class="ex-tip">${esc(p.lv.tip)}</div>
       ${rows}
     </div>`;
   }).join('');
@@ -853,7 +954,7 @@ function renderWeight() {
 }
 
 /* ---------- チャット ---------- */
-const CHAT_SUGGESTS = ['今日なにする?', '体重が減らない', '夕食を安くしたい', 'プロテインのタイミング', '筋肉痛のときは?', 'フェイスラインはいつ変わる?'];
+const CHAT_SUGGESTS = ['今日なにする?', '進行の仕組みは?', '体重が減らない', '夕食を安くしたい', 'プロテインのタイミング', '筋肉痛のときは?', 'フェイスラインはいつ変わる?'];
 
 function renderChat() {
   $('chat-suggest').innerHTML = CHAT_SUGGESTS.map(s =>
@@ -910,7 +1011,15 @@ function botReply(text) {
   }
 
   if (has('楽', '物足りない', '簡単すぎ', '軽い')) {
-    return `全セットを目標回数こなせた状態が2回続くと、次回の目標が自動で+1されます(記録さえすればOK)。\nそれでも物足りない場合の優先順位:\n①動きをゆっくりにする(下ろし3秒)…一番効きます\n②チューブを1段重くする(ローイングは13.6kgで既に上限。プレス系は肩に違和感がなければ9.1→11.4kg)\n③セットを2→3に増やす\n回数を無限に増やすより、①②の方が引き締め効率が良いです。`;
+    return `記録さえすれば自動で強くなっていきます:\n①全セットで目標達成 → 次回の目標が+1回\n②レベル内の上限に到達 → 2→3セットに\n③3セットでも達成 → 種目がレベルアップ(例:斜め腕立て→膝つき→床の腕立て)\n\nそれでも物足りない日は「動きをゆっくり(下ろし3秒)」が一番効きます。回数を無限に増やすより質を上げる方が引き締め効率が良いです。`;
+  }
+
+  if (has('自動', 'レベル', '進行', '仕組み')) {
+    const cur = ['A', 'B'].map(m => WORKOUTS[m].map(ex => {
+      const p = exProg(ex);
+      return `・${p.lv.name}(Lv${p.lvl + 1}/${ex.levels.length}) ${targetLabel(ex)}`;
+    }).join('\n')).join('\n--- メニューB ---\n');
+    return `進行の仕組み:全セットで目標を達成するたびに1段階進みます。\n①回数+1(上限まで)→ ②2→3セット → ③種目がレベルアップ(全種目Lv3まで)\n達成できなかった日は現状維持で、下がることはありません。\n\n現在の状態:\n--- メニューA ---\n${cur}`;
   }
 
   if (has('タンパク質', 'たんぱく', 'カロリー', '栄養', '足りてる', '少なく', '少ない')) {
@@ -949,7 +1058,7 @@ function botReply(text) {
 
   if (has('筋トレ', 'トレーニング', 'メニュー')) {
     const menu = suggestedMenu();
-    const list = WORKOUTS[menu].map(ex => `・${ex.name} ${targetLabel(ex)}`).join('\n');
+    const list = WORKOUTS[menu].map(ex => `・${exName(ex)} ${targetLabel(ex)}`).join('\n');
     return `次にやるのはメニュー${menu}:\n${list}\n\n所要15〜20分。終了時に「あと3回できそう」くらいで止めるのがポイント。回数は筋トレタブで記録すると次回の目安が自動で調整されます。`;
   }
 
@@ -981,7 +1090,7 @@ const app = {
     const menu = currentMenu();
     const ex = WORKOUTS[menu].find(e => e.id === exId);
     const step = ex.step || 1;
-    if (!draft[exId]) draft[exId] = Array(ex.sets).fill(0);
+    if (!draft[exId]) draft[exId] = Array(exProg(ex).sets).fill(0);
     let v = draft[exId][setIdx] + dir * step;
     if (v < 0) v = 0;
     // 初回タップは目標値から始める(+のとき)
@@ -995,9 +1104,13 @@ const app = {
     const anyDone = Object.values(draft).some(sets => sets.some(v => v > 0));
     if (!anyDone) { toast('回数を入力してから記録してね'); return; }
     const results = {};
-    for (const ex of WORKOUTS[menu]) results[ex.id] = (draft[ex.id] || []).slice();
+    const names = {};
+    for (const ex of WORKOUTS[menu]) {
+      results[ex.id] = (draft[ex.id] || []).slice();
+      names[ex.id] = exProg(ex).lv.name;
+    }
     const notes = applyProgression(menu, results);
-    state.workouts[todayKey()] = { menu, results };
+    state.workouts[todayKey()] = { menu, results, names };
     save();
     draft = {};
     uiMenu = null;
