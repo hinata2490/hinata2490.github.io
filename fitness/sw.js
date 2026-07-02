@@ -1,5 +1,5 @@
 /* Service Worker — オフライン対応(ネット優先・失敗時キャッシュ) */
-const CACHE = 'fitness-v2';
+const CACHE = 'fitness-v3';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
