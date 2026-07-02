@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1420">
+  <title>筋トレ・食事管理</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>💪 筋トレ・食事管理</h1>
+    <span class="date" id="header-date"></span>
+  </header>
+
+  <main>
+    <!-- ========== 今日 ========== -->
+    <section id="page-today" class="tab-page active">
+      <div class="today-hero" id="today-hero"></div>
+
+      <div class="quick-row">
+        <div class="quick-box">
+          <div class="label">今日の体重</div>
+          <div class="value" id="qb-weight">--</div>
+        </div>
+        <div class="quick-box">
+          <div class="label">7日平均</div>
+          <div class="value" id="qb-avg">--</div>
+        </div>
+        <div class="quick-box">
+          <div class="label">今週の筋トレ</div>
+          <div class="value" id="qb-workouts">0<small>/3</small></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🍚 今日の食事チェック <span class="badge" id="meal-progress-badge">0/4</span></h2>
+        <div class="check-list" id="meal-checklist"></div>
+        <div class="muted mt8" id="today-nutrition-summary"></div>
+      </div>
+
+      <div class="card" id="today-dinner-card">
+        <h2>🍳 今日の夕食 <span class="badge orange" id="dinner-price-badge"></span></h2>
+        <div id="today-dinner-body"></div>
+      </div>
+    </section>
+
+    <!-- ========== 筋トレ ========== -->
+    <section id="page-workout" class="tab-page">
+      <div class="card" id="workout-status-card"></div>
+
+      <div class="menu-toggle">
+        <button id="menu-btn-A" onclick="app.setMenu('A')">メニュー A</button>
+        <button id="menu-btn-B" onclick="app.setMenu('B')">メニュー B</button>
+      </div>
+
+      <div id="exercise-list"></div>
+
+      <button class="btn" id="workout-save-btn" onclick="app.saveWorkout()">今日の筋トレを記録する</button>
+      <p class="muted mt8">目安:終了時に「あと3回くらいできそう」と感じる強度でOK。フォームが崩れたらそのセットは終了。</p>
+    </section>
+
+    <!-- ========== 食事 ========== -->
+    <section id="page-meal" class="tab-page">
+      <div class="card">
+        <h2>📋 今日の食事目安</h2>
+        <table class="meal-guide-table" id="meal-guide-table"></table>
+        <p class="muted mt8">※ 米代(月3,500円)は別枠。上の金額は米を除いた食費(目安 1日1,183円以内)。</p>
+      </div>
+
+      <div class="card">
+        <h2>🍳 今日の夕食レシピ</h2>
+        <div id="meal-dinner-body"></div>
+        <div class="recipe-actions">
+          <button class="btn secondary small" onclick="app.nextDinner()">🔄 別の夕食案にする</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🔍 食材から夕食を探す</h2>
+        <div class="search-box">
+          <input type="text" id="recipe-search-input" placeholder="例:キャベツ、豚肉、サバ缶…" oninput="app.searchRecipes()">
+        </div>
+        <div class="ing-chips" id="ing-chips"></div>
+        <details class="search-results" id="search-results-wrap">
+          <summary id="search-results-summary">検索結果</summary>
+          <div id="search-results"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ========== 体重 ========== -->
+    <section id="page-weight" class="tab-page">
+      <div class="card">
+        <h2>⚖️ 今日の体重を記録</h2>
+        <div class="weight-input-row">
+          <input type="number" id="weight-input" step="0.1" min="40" max="120" placeholder="62.0">
+          <button class="btn" onclick="app.saveWeight()">記録</button>
+        </div>
+        <div class="weight-stats">
+          <div class="quick-box">
+            <div class="label">7日平均</div>
+            <div class="value" id="ws-avg">--</div>
+          </div>
+          <div class="quick-box">
+            <div class="label">前週平均との差</div>
+            <div class="value" id="ws-diff">--</div>
+          </div>
+        </div>
+        <p class="muted mt8">目安レンジ:60.5〜61.5kg(ただし62kgのままでも見た目が変われば◎)。日々の上下より7日平均で見る。</p>
+      </div>
+
+      <div class="card">
+        <h2>📈 推移(直近30日)</h2>
+        <svg id="weight-chart" viewBox="0 0 320 140" preserveAspectRatio="none"></svg>
+      </div>
+
+      <div class="card">
+        <h2>📝 履歴</h2>
+        <div class="weight-history" id="weight-history"></div>
+      </div>
+    </section>
+
+    <!-- ========== チャット ========== -->
+    <section id="page-chat" class="tab-page">
+      <div class="chat-suggest" id="chat-suggest"></div>
+      <div class="chat-log" id="chat-log"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="質問してみる…" onkeydown="if(event.key==='Enter')app.sendChat()">
+        <button class="btn" onclick="app.sendChat()">送信</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 下部ナビ -->
+  <nav class="tab-bar">
+    <button id="tab-today" class="on" onclick="app.showTab('today')"><span class="icon">🏠</span>今日</button>
+    <button id="tab-workout" onclick="app.showTab('workout')"><span class="icon">💪</span>筋トレ</button>
+    <button id="tab-meal" onclick="app.showTab('meal')"><span class="icon">🍳</span>食事</button>
+    <button id="tab-weight" onclick="app.showTab('weight')"><span class="icon">⚖️</span>体重</button>
+    <button id="tab-chat" onclick="app.showTab('chat')"><span class="icon">💬</span>相談</button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
