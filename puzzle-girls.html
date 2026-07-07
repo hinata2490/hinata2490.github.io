@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>パズルガールズ 〜ドロップクエスト〜</title>
+<meta name="description" content="パズドラ風のドロップパズルRPG。美少女キャラのチームでコンボを決めてダンジョンを攻略しよう！">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#ffd45e;
+  --fire:#ff4530; --water:#2fa8ff; --wood:#35c93f; --light:#ffc928; --dark:#b04ce8; --heart:#ff6fb1;
+}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0916}
+body{font-family:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN',sans-serif;
+  display:flex;align-items:center;justify-content:center;touch-action:none}
+
+#screen{
+  position:relative;width:560px;height:1010px;transform-origin:center;
+  background:linear-gradient(#171130,#0d0a1c);
+  border-radius:18px;overflow:hidden;
+  box-shadow:0 0 80px rgba(80,60,180,.25), 0 0 0 3px #2a2148;
+  display:flex;flex-direction:column;
+}
+
+/* ===== battle area ===== */
+#battleArea{
+  position:relative;height:392px;flex-shrink:0;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 120%, rgba(120,80,255,.25), transparent 60%),
+    radial-gradient(ellipse at 20% 0%, rgba(60,40,140,.5), transparent 55%),
+    linear-gradient(#241a4d 0%, #171130 70%, #120d26 100%);
+}
+#battleArea::before{ /* ground */
+  content:'';position:absolute;left:-10%;right:-10%;bottom:-60px;height:150px;
+  background:radial-gradient(ellipse at 50% 0%, #2e2360, #1a1338 70%);
+  border-radius:50%;
+}
+#floorLbl{
+  position:absolute;top:10px;left:14px;z-index:3;
+  font-family:'Mochiy Pop One';font-size:15px;color:#fff;
+  background:rgba(10,8,24,.75);padding:5px 16px;border-radius:16px;
+  border:2px solid rgba(255,255,255,.14);
+}
+#turnLbl{
+  position:absolute;top:10px;right:14px;z-index:3;font-size:13px;font-weight:800;color:#bdb3e8;
+  background:rgba(10,8,24,.6);padding:6px 14px;border-radius:14px;
+}
+#enemies{
+  position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;
+  gap:28px;padding-bottom:34px;z-index:2;
+}
+.enemy{position:relative;text-align:center;transition:opacity .5s,transform .5s}
+.enemy.dead{opacity:0;transform:scale(.6) translateY(20px);pointer-events:none}
+.enemy .sprite{transition:transform .12s;filter:drop-shadow(0 10px 14px rgba(0,0,0,.55))}
+.enemy.atk .sprite{transform:translateY(26px) scale(1.12)}
+.enemy.hit .sprite{animation:eHit .3s}
+@keyframes eHit{0%{transform:translateX(0);filter:drop-shadow(0 0 16px #fff) brightness(2.2)}30%{transform:translateX(-9px)}60%{transform:translateX(8px)}100%{transform:none}}
+.ehp{width:110px;height:9px;background:rgba(0,0,0,.65);border-radius:5px;margin:6px auto 0;overflow:hidden;border:1px solid rgba(255,255,255,.25)}
+.ehp i{display:block;height:100%;background:linear-gradient(#ffe97a,#f5a623);border-radius:5px;transition:width .3s}
+.ecd{
+  position:absolute;top:-6px;right:-4px;width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(#fff, #dfe3ff 60%);color:#1c1c3a;
+  font-family:'Mochiy Pop One';font-size:17px;line-height:32px;
+  border:3px solid #4a4a7a;box-shadow:0 2px 6px rgba(0,0,0,.5);
+}
+.ecd.danger{background:radial-gradient(#ffd9d9,#ff5b5b 70%);color:#fff;border-color:#a01212;animation:cdPulse .5s infinite alternate}
+@keyframes cdPulse{from{transform:scale(1)}to{transform:scale(1.18)}}
+.ename{font-size:12px;font-weight:800;color:#e8e2ff;text-shadow:0 2px 3px #000;margin-top:4px}
+
+/* damage popups */
+.dmg{
+  position:absolute;z-index:6;font-family:'Mochiy Pop One';font-size:30px;
+  text-shadow:2px 2px 0 #000,-2px 2px 0 #000,2px -2px 0 #000,-2px -2px 0 #000;
+  animation:dmgUp 1s ease-out forwards;pointer-events:none;white-space:nowrap;
+  transform:translateX(-50%);
+}
+@keyframes dmgUp{0%{opacity:0;transform:translateX(-50%) translateY(10px) scale(1.6)}15%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-46px)}}
+
+#msg{
+  position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;
+  background:rgba(8,6,20,.85);color:#fff;font-weight:800;font-size:16px;
+  padding:8px 24px;border-radius:20px;border:2px solid rgba(255,255,255,.18);
+  opacity:0;transition:opacity .25s;white-space:nowrap;
+}
+#msg.show{opacity:1}
+
+#flash{position:absolute;inset:0;background:rgba(255,30,30,.35);opacity:0;pointer-events:none;z-index:8}
+
+/* ===== team ===== */
+#team{
+  display:flex;justify-content:center;gap:8px;padding:8px 6px 4px;flex-shrink:0;
+  background:linear-gradient(#141026,#100c20);
+}
+.girl{
+  position:relative;width:86px;height:86px;border-radius:14px;overflow:hidden;
+  border:3px solid #555;cursor:pointer;flex-shrink:0;
+  transition:transform .15s;background:#000;
+}
+.girl svg{display:block;width:100%;height:100%}
+.girl.attack{animation:gAtk .4s}
+@keyframes gAtk{0%{transform:none}30%{transform:translateY(-14px) scale(1.1)}100%{transform:none}}
+.girl .cdov{
+  position:absolute;inset:0;background:rgba(10,8,24,.66);display:flex;
+  align-items:center;justify-content:center;
+  font-family:'Mochiy Pop One';font-size:30px;color:#fff;text-shadow:0 2px 4px #000;
+}
+.girl .skillrdy{
+  position:absolute;left:0;right:0;bottom:0;padding:2px 0;
+  background:linear-gradient(#ffe97a,#ffb800);color:#5b3a00;
+  font-size:11px;font-weight:800;text-align:center;display:none;
+}
+.girl.ready{animation:gGlow .8s infinite alternate}
+.girl.ready .skillrdy{display:block}
+.girl.ready:hover{transform:translateY(-4px)}
+@keyframes gGlow{from{box-shadow:0 0 4px 1px var(--gold)}to{box-shadow:0 0 16px 4px var(--gold)}}
+.girl .lv{position:absolute;top:2px;left:4px;font-size:10px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
+
+/* ===== hp bar ===== */
+#hpWrap{padding:4px 14px 6px;flex-shrink:0;background:#100c20}
+#hpBar{height:20px;background:#090714;border-radius:11px;overflow:hidden;border:2px solid #3a3160;position:relative}
+#hpFill{height:100%;width:100%;background:linear-gradient(#8dff7a,#2ec94e);border-radius:9px;transition:width .35s,background .35s}
+#hpTxt{position:absolute;inset:0;text-align:center;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 3px #000;line-height:17px}
+#healFx{position:absolute;left:50%;transform:translateX(-50%);top:-6px;font-family:'Mochiy Pop One';color:#5dff7d;font-size:24px;text-shadow:2px 2px 0 #000;opacity:0;pointer-events:none}
+#healFx.show{animation:dmgUp 1s ease-out forwards}
+
+/* ===== move timer + board ===== */
+#moveWrap{height:10px;margin:2px 14px;background:#090714;border-radius:5px;overflow:hidden;flex-shrink:0}
+#moveBar{height:100%;width:100%;background:linear-gradient(90deg,#37e2ff,#ffe45e);border-radius:5px}
+#boardWrap{position:relative;flex:1;display:flex;align-items:center;justify-content:center;padding:2px 10px 12px}
+#board{display:block;width:540px;height:450px;border-radius:12px;touch-action:none;cursor:grab}
+#comboBig{
+  position:absolute;right:22px;top:-4px;z-index:4;pointer-events:none;
+  font-family:'Mochiy Pop One';font-size:34px;color:#ffe45e;
+  text-shadow:3px 3px 0 #000,-2px 2px 0 #000,2px -2px 0 #000;
+  opacity:0;transform:rotate(6deg);
+}
+#comboBig.show{opacity:1;animation:comboPop .25s}
+@keyframes comboPop{0%{transform:rotate(6deg) scale(1.7)}100%{transform:rotate(6deg) scale(1)}}
+
+/* ===== overlays ===== */
+.overlay{
+  position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;text-align:center;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(120,80,255,.3), transparent 55%),
+    linear-gradient(#1b1438,#0d0a1c);
+}
+#gameTitle{font-family:'Mochiy Pop One';font-size:52px;line-height:1.2;color:#fff;
+  text-shadow:0 0 26px rgba(255,120,220,.55),4px 4px 0 #000}
+#gameTitle small{display:block;font-size:20px;color:var(--gold);margin-top:2px}
+.titleGirls{display:flex;gap:10px;margin:4px 0}
+.tg{width:92px;text-align:center}
+.tg .pf{width:88px;height:88px;border-radius:16px;overflow:hidden;border:3px solid;box-shadow:0 6px 14px rgba(0,0,0,.5)}
+.tg .pf svg{display:block;width:100%;height:100%}
+.tg .nm{font-family:'Mochiy Pop One';font-size:13px;color:#fff;margin-top:5px;text-shadow:0 2px 3px #000}
+.tg .el{font-size:10px;font-weight:800;padding:1px 8px;border-radius:8px;color:#fff;display:inline-block;margin-top:2px}
+.bigbtn{
+  font-family:'Mochiy Pop One';font-size:26px;color:#4a2c00;
+  background:linear-gradient(#ffe97a,#ffb800);border:none;border-radius:36px;
+  padding:15px 62px;cursor:pointer;box-shadow:0 6px 0 #a67300,0 10px 22px rgba(0,0,0,.5);
+  transition:transform .1s;
+}
+.bigbtn:hover{transform:scale(1.05)}
+.bigbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #a67300}
+.howto{color:#cfc6f5;font-size:13.5px;line-height:2;background:rgba(0,0,0,.4);
+  padding:10px 24px;border-radius:14px}
+.howto b{color:#fff;background:#3a3160;border-radius:6px;padding:1px 8px;font-size:12.5px}
+
+#result{display:none}
+#resTitle{font-family:'Mochiy Pop One';font-size:66px;text-shadow:4px 4px 0 #000}
+#resTitle.win{color:var(--gold);animation:winPop .6s ease}
+#resTitle.lose{color:#8a80b8}
+@keyframes winPop{0%{transform:scale(3);opacity:0}70%{transform:scale(.92)}100%{transform:scale(1)}}
+#resStats{color:#e8e2ff;font-size:17px;font-weight:800;line-height:2.1;background:rgba(0,0,0,.4);padding:12px 40px;border-radius:16px}
+#resStats span{color:var(--gold);font-family:'Mochiy Pop One'}
+
+/* skill toast */
+#skillToast{
+  position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);z-index:15;
+  font-family:'Mochiy Pop One';font-size:34px;color:#fff;white-space:nowrap;
+  text-shadow:0 0 20px rgba(255,200,60,.8),3px 3px 0 #000;
+  opacity:0;pointer-events:none;
+}
+#skillToast.show{animation:stIn 1.3s ease forwards}
+@keyframes stIn{0%{opacity:0;transform:translate(-50%,-50%) scale(2)}18%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+
+#muteBtn{position:absolute;left:10px;bottom:8px;z-index:25;background:none;border:none;font-size:20px;opacity:.6;cursor:pointer}
+#muteBtn:hover{opacity:1}
+</style>
+</head>
+<body>
+<div id="screen">
+  <div id="battleArea">
+    <div id="floorLbl">バトル 1/3</div>
+    <div id="turnLbl">TURN 1</div>
+    <div id="enemies"></div>
+    <div id="msg"></div>
+    <div id="flash"></div>
+  </div>
+  <div id="team"></div>
+  <div id="hpWrap">
+    <div id="hpBar"><div id="hpFill"></div><div id="hpTxt"></div><div id="healFx"></div></div>
+  </div>
+  <div id="moveWrap"><div id="moveBar"></div></div>
+  <div id="boardWrap">
+    <canvas id="board" width="540" height="450"></canvas>
+    <div id="comboBig"></div>
+  </div>
+
+  <div id="skillToast"></div>
+
+  <div class="overlay" id="menu">
+    <div id="gameTitle">パズルガールズ<small>〜ドロップクエスト〜</small></div>
+    <div class="titleGirls" id="titleGirls"></div>
+    <button class="bigbtn" id="startBtn">クエスト開始！</button>
+    <div class="howto">
+      <b>ドロップをなぞって</b> 動かして 同じ色を<b>3つ以上</b>そろえよう！<br>
+      動かしはじめてから <b>5秒間</b> 自由に動かせる（ななめ移動もOK）<br>
+      コンボを重ねてダメージUP！ <b>ハート</b>で回復、キャラをタップで<b>スキル発動</b>！
+    </div>
+  </div>
+
+  <div class="overlay" id="result">
+    <div id="resTitle"></div>
+    <div id="resStats"></div>
+    <button class="bigbtn" id="retryBtn">もういちど！</button>
+  </div>
+
+  <button id="muteBtn">🔊</button>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   パズルガールズ — Puzzle & Dragons-inspired match RPG
+   ========================================================= */
+const COLS=6, ROWS=5, CS=90;
+const MOVE_TIME=5;
+const EL={FIRE:0,WATER:1,WOOD:2,LIGHT:3,DARK:4,HEART:5};
+const ELEMS=[
+  {name:'火',color:'#ff4530',hi:'#ffb09a',lo:'#a3130a'},
+  {name:'水',color:'#2fa8ff',hi:'#b4e2ff',lo:'#0a58a8'},
+  {name:'木',color:'#35c93f',hi:'#b0f5a8',lo:'#0f7a20'},
+  {name:'光',color:'#ffc928',hi:'#fff3b8',lo:'#c78a00'},
+  {name:'闇',color:'#b04ce8',hi:'#e3bcff',lo:'#5f1a96'},
+  {name:'回復',color:'#ff6fb1',hi:'#ffd3e8',lo:'#c22568'},
+];
+
+/* =========================================================
+   Girls (SVG portraits)
+   ========================================================= */
+function girlSVG(g,big){
+  const id=g.id+(big?'b':'');
+  const eye=(cx)=>`
+    <ellipse cx="${cx}" cy="57" rx="6.2" ry="7.4" fill="#fff"/>
+    <ellipse cx="${cx}" cy="57.6" rx="4.8" ry="6.2" fill="url(#ir${id})"/>
+    <ellipse cx="${cx}" cy="58.6" rx="2.3" ry="3.2" fill="#26202c"/>
+    <circle cx="${cx-1.7}" cy="54.6" r="1.7" fill="#fff"/>
+    <circle cx="${cx+1.6}" cy="60" r="0.9" fill="#fff" opacity=".85"/>
+    <path d="M${cx-6.6} 51.6 Q${cx} 47.6 ${cx+6.6} 51.6" stroke="#3b2a33" stroke-width="2.1" fill="none" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg${id}" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="${g.bgA}"/><stop offset="100%" stop-color="${g.bgB}"/>
+    </radialGradient>
+    <linearGradient id="ir${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${g.eyeA}"/><stop offset="100%" stop-color="${g.eyeB}"/>
+    </linearGradient>
+    <linearGradient id="hr${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${g.hairA}"/><stop offset="100%" stop-color="${g.hairB}"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" fill="url(#bg${id})"/>
+  <circle cx="18" cy="20" r="10" fill="#ffffff" opacity=".08"/>
+  <circle cx="85" cy="72" r="14" fill="#ffffff" opacity=".07"/>
+  ${g.backHair}
+  <path d="M18 100 Q50 70 82 100 Z" fill="${g.cloth}"/>
+  <path d="M31 100 Q50 82 69 100 Z" fill="#fff" opacity=".9"/>
+  <rect x="44.5" y="70" width="11" height="13" rx="4" fill="${g.skin}"/>
+  <ellipse cx="50" cy="53.5" rx="22.5" ry="24.5" fill="${g.skin}"/>
+  <ellipse cx="33.5" cy="64" rx="4" ry="2.3" fill="#ff9db4" opacity=".5"/>
+  <ellipse cx="66.5" cy="64" rx="4" ry="2.3" fill="#ff9db4" opacity=".5"/>
+  ${eye(40.5)} ${eye(59.5)}
+  <path d="M46.2 70 Q50 73.4 53.8 70" stroke="#d4506a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  ${g.bangs}
+  <path d="M27 40 C24.5 54 25.5 66 29 75 L34 70 C31 61 30.6 50 31.6 41 Z" fill="url(#hr${id})"/>
+  <path d="M73 40 C75.5 54 74.5 66 71 75 L66 70 C69 61 69.4 50 68.4 41 Z" fill="url(#hr${id})"/>
+  ${g.acc}
+</svg>`;
+}
+const BANGS=`<path d="M27.5 47 C26.5 22 37 13 50 13 C63 13 73.5 22 72.5 47
+ C68 39.5 65 44 61 36.5 C56.5 45 52.5 37.5 49 44 C45 36.5 41.5 45 37.5 37.5 C33.5 44 30.5 40 27.5 47 Z" fill="url(#hrHH)"/>`;
+function bangsFor(id){ return BANGS.replace('hrHH','hr'+id); }
+
+const GIRLS=[
+  { id:'hina', name:'ヒナ', elem:EL.FIRE, atk:1200, rcv:120,
+    skill:{name:'フレイムバースト', desc:'敵1体に攻撃力×10の火ダメージ', cd:12},
+    skin:'#ffe3d0', hairA:'#ff6b4a', hairB:'#d92b0f', eyeA:'#ff8a5c', eyeB:'#c92200',
+    bgA:'#ffb07a', bgB:'#e0491f', cloth:'#d92b0f',
+    backHairT:'twin' },
+  { id:'mio', name:'ミオ', elem:EL.WATER, atk:950, rcv:380,
+    skill:{name:'ヒーリングウェーブ', desc:'HPを40%回復', cd:8},
+    skin:'#ffe8d8', hairA:'#7ecbff', hairB:'#1f78d6', eyeA:'#6cc7ff', eyeB:'#0a58a8',
+    bgA:'#a8ddff', bgB:'#2470c9', cloth:'#1f78d6',
+    backHairT:'long' },
+  { id:'konoha', name:'コノハ', elem:EL.WOOD, atk:1050, rcv:180,
+    skill:{name:'ウィンドディレイ', desc:'敵全体の行動を2ターン遅らせる', cd:11},
+    skin:'#ffe8d8', hairA:'#8be07a', hairB:'#2e9e3a', eyeA:'#79d96a', eyeB:'#0f7a20',
+    bgA:'#c2f0a8', bgB:'#3f9e46', cloth:'#2e9e3a',
+    backHairT:'bob' },
+  { id:'luna', name:'ルナ', elem:EL.LIGHT, atk:1100, rcv:200,
+    skill:{name:'シャイニング', desc:'ランダムなドロップ6個を光に変化', cd:7},
+    skin:'#fff0e0', hairA:'#fff2b0', hairB:'#f0b428', eyeA:'#ffd45e', eyeB:'#c78a00',
+    bgA:'#fff0b8', bgB:'#e8a828', cloth:'#f0b428',
+    backHairT:'wavy' },
+  { id:'yoru', name:'ヨル', elem:EL.DARK, atk:1250, rcv:100,
+    skill:{name:'グラビティ', desc:'敵全体のHPを25%減らす', cd:13},
+    skin:'#ffe8dc', hairA:'#c887f0', hairB:'#6d2ab0', eyeA:'#d49aff', eyeB:'#5f1a96',
+    bgA:'#c9a0f0', bgB:'#5b2596', cloth:'#6d2ab0',
+    backHairT:'long' },
+];
+function buildGirl(g){
+  const id=g.id, H=`url(#hr${id})`, Hb=`url(#hr${id}b)`;
+  const back={
+    twin:`<path d="M50 8 C26 8 18 28 20 47 C21.5 60 27 69 31 73 L69 73 C73 69 78.5 60 80 47 C82 28 74 8 50 8 Z" fill="HH"/>
+      <path d="M22 38 C8 52 9 78 16 95 C23 82 25 60 27 44 Z" fill="HH"/>
+      <path d="M78 38 C92 52 91 78 84 95 C77 82 75 60 73 44 Z" fill="HH"/>`,
+    long:`<path d="M50 8 C25 8 16.5 30 18 52 C19 74 15 88 12 97 L88 97 C85 88 81 74 82 52 C83.5 30 75 8 50 8 Z" fill="HH"/>`,
+    bob:`<path d="M50 8 C26 8 18 27 20 46 C22 63 30 72 34 76 L66 76 C70 72 78 63 80 46 C82 27 74 8 50 8 Z" fill="HH"/>`,
+    wavy:`<path d="M50 8 C25 8 16.5 30 18 52 C19 68 13 76 15 86 C17 92 13 95 12 97 L88 97 C87 95 83 92 85 86 C87 76 81 68 82 52 C83.5 30 75 8 50 8 Z" fill="HH"/>`,
+  }[g.backHairT];
+  const accs={
+    hina:`<path d="M30 20 L21 12 L23 22 Z" fill="#ffdd2e"/><path d="M30 20 L38 11 L37 21 Z" fill="#ffdd2e"/><circle cx="30" cy="20" r="3.4" fill="#ff9d00"/>`,
+    mio:`<circle cx="68" cy="26" r="3" fill="#eaf6ff"/><circle cx="74" cy="32" r="2.4" fill="#eaf6ff"/><circle cx="68" cy="26" r="1.2" fill="#9ed4ff"/>`,
+    konoha:`<path d="M64 14 Q74 8 80 14 Q74 24 64 20 Q63 16 64 14 Z" fill="#4fc93f"/><path d="M64 15 Q72 14 79 15" stroke="#2a7a1f" stroke-width="1" fill="none"/>`,
+    luna:`<path d="M69 15 L71.3 20 L76.6 20.6 L72.6 24 L73.9 29.2 L69 26.4 L64.1 29.2 L65.4 24 L61.4 20.6 L66.7 20 Z" fill="#fff6c8" stroke="#e8a828" stroke-width="1.2"/>`,
+    yoru:`<path d="M72 13 A8.5 8.5 0 1 0 79 26 A6.8 6.8 0 1 1 72 13 Z" fill="#ffe97a"/><circle cx="61" cy="15" r="1.4" fill="#ffe97a"/><circle cx="83" cy="31" r="1.2" fill="#ffe97a"/>`,
+  };
+  return {
+    portrait:(big)=>girlSVG({
+      ...g, id:g.id, backHair:back.replace(/HH/g,big?Hb:H),
+      bangs:bangsFor(big?id+'b':id), acc:accs[g.id],
+    },big),
+  };
+}
+const GIRL_ART=GIRLS.map(buildGirl);
+
+/* =========================================================
+   Enemies (SVG)
+   ========================================================= */
+function slimeSVG(c1,c2,w){
+  return `<svg width="${w}" height="${w*.8}" viewBox="0 0 100 80">
+  <defs><radialGradient id="sl${c1.slice(1)}" cx="35%" cy="25%" r="90%">
+    <stop offset="0%" stop-color="${c2}"/><stop offset="100%" stop-color="${c1}"/></radialGradient></defs>
+  <path d="M50 8 C78 8 92 38 90 56 C88 72 72 76 50 76 C28 76 12 72 10 56 C8 38 22 8 50 8 Z" fill="url(#sl${c1.slice(1)})"/>
+  <ellipse cx="34" cy="24" rx="10" ry="6" fill="#fff" opacity=".5" transform="rotate(-18 34 24)"/>
+  <circle cx="38" cy="44" r="5" fill="#1c1030"/><circle cx="62" cy="44" r="5" fill="#1c1030"/>
+  <circle cx="39.5" cy="42.5" r="1.6" fill="#fff"/><circle cx="63.5" cy="42.5" r="1.6" fill="#fff"/>
+  <path d="M42 58 Q50 64 58 58" stroke="#1c1030" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+function batSVG(w){
+  return `<svg width="${w}" height="${w*.72}" viewBox="0 0 120 86">
+  <path d="M60 34 C48 12 24 8 4 18 C20 24 24 34 22 44 C34 38 44 40 50 50 Z" fill="#5b2a8c"/>
+  <path d="M60 34 C72 12 96 8 116 18 C100 24 96 34 98 44 C86 38 76 40 70 50 Z" fill="#5b2a8c"/>
+  <ellipse cx="60" cy="48" rx="22" ry="24" fill="#7b3ab8"/>
+  <path d="M48 28 L52 40 L42 38 Z" fill="#7b3ab8"/><path d="M72 28 L68 40 L78 38 Z" fill="#7b3ab8"/>
+  <circle cx="52" cy="46" r="5" fill="#ffd428"/><circle cx="68" cy="46" r="5" fill="#ffd428"/>
+  <circle cx="52" cy="46" r="2.2" fill="#1c1030"/><circle cx="68" cy="46" r="2.2" fill="#1c1030"/>
+  <path d="M54 60 L57 65 L60 60 L63 65 L66 60" stroke="#fff" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+  </svg>`;
+}
+function goblinSVG(w){
+  return `<svg width="${w}" height="${w*1.02}" viewBox="0 0 100 102">
+  <path d="M14 40 L2 30 L16 30 Z" fill="#3f9e46"/><path d="M86 40 L98 30 L84 30 Z" fill="#3f9e46"/>
+  <ellipse cx="50" cy="44" rx="34" ry="32" fill="#57b85e"/>
+  <path d="M50 6 L56 20 L44 20 Z" fill="#e8d8a0"/>
+  <path d="M28 40 Q34 34 42 39" stroke="#1c3018" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <path d="M72 40 Q66 34 58 39" stroke="#1c3018" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <circle cx="36" cy="46" r="4.6" fill="#ffe45e"/><circle cx="64" cy="46" r="4.6" fill="#ffe45e"/>
+  <circle cx="36" cy="46" r="2" fill="#1c1030"/><circle cx="64" cy="46" r="2" fill="#1c1030"/>
+  <path d="M38 62 Q50 70 62 62 L58 66 L54 62.5 L50 67 L46 62.5 L42 66 Z" fill="#1c3018"/>
+  <ellipse cx="50" cy="88" rx="26" ry="13" fill="#3f7a3a"/>
+  <ellipse cx="50" cy="84" rx="18" ry="8" fill="#57985e"/>
+  </svg>`;
+}
+function dragonSVG(w){
+  return `<svg width="${w}" height="${w*.82}" viewBox="0 0 200 164">
+  <defs><linearGradient id="drg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#7b3ab8"/><stop offset="100%" stop-color="#3d1a66"/></linearGradient></defs>
+  <path d="M60 70 C30 40 30 16 44 4 C50 22 62 28 76 32 Z" fill="#4a2080"/>
+  <path d="M140 70 C170 40 170 16 156 4 C150 22 138 28 124 32 Z" fill="#4a2080"/>
+  <ellipse cx="100" cy="102" rx="58" ry="46" fill="url(#drg)"/>
+  <path d="M100 40 C64 40 48 66 50 88 C52 106 70 116 100 116 C130 116 148 106 150 88 C152 66 136 40 100 40 Z" fill="url(#drg)"/>
+  <path d="M64 44 L54 22 L74 34 Z" fill="#e8d8f8"/><path d="M136 44 L146 22 L126 34 Z" fill="#e8d8f8"/>
+  <path d="M100 30 L106 44 L94 44 Z" fill="#e8d8f8"/>
+  <path d="M62 66 Q72 58 84 64" stroke="#1c0a30" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M138 66 Q128 58 116 64" stroke="#1c0a30" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="74" cy="74" rx="8" ry="9" fill="#ff3b3b"/><ellipse cx="126" cy="74" rx="8" ry="9" fill="#ff3b3b"/>
+  <circle cx="74" cy="72" r="3" fill="#ffd0d0"/><circle cx="126" cy="72" r="3" fill="#ffd0d0"/>
+  <path d="M70 96 Q100 112 130 96 L122 104 L114 97 L107 105 L100 98 L93 105 L86 97 L78 104 Z" fill="#2a1048"/>
+  <path d="M76 92 L80 100 M124 92 L120 100" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="100" cy="140" rx="44" ry="16" fill="#341458"/>
+  <path d="M60 140 L48 158 L70 150 Z" fill="#4a2080"/><path d="M140 140 L152 158 L130 150 Z" fill="#4a2080"/>
+  </svg>`;
+}
+const FLOORS=[
+  [
+    {name:'火スライム', svg:()=>slimeSVG('#e83a20','#ffb09a',110), hp:3200, atk:1400, cd:2, elem:EL.FIRE},
+    {name:'水スライム', svg:()=>slimeSVG('#1f78d6','#b4e2ff',110), hp:3200, atk:1400, cd:3, elem:EL.WATER},
+  ],
+  [
+    {name:'ゴブリン', svg:()=>goblinSVG(120), hp:8500, atk:2400, cd:2, elem:EL.WOOD},
+    {name:'デビルバット', svg:()=>batSVG(120), hp:6000, atk:1600, cd:2, elem:EL.DARK},
+  ],
+  [
+    {name:'冥竜ヴェルザード', svg:()=>dragonSVG(250), hp:32000, atk:4200, cd:2, elem:EL.DARK, boss:true},
+  ],
+];
+
+/* =========================================================
+   Audio
+   ========================================================= */
+let ac=null, muted=false, noiseBuf=null;
+function initAudio(){
+  if(ac) return;
+  try{
+    ac=new (window.AudioContext||window.webkitAudioContext)();
+    noiseBuf=ac.createBuffer(1,ac.sampleRate*.25,ac.sampleRate);
+    const d=noiseBuf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  }catch(e){}
+}
+function tone(f,dur,type,vol,slide,delay){
+  if(!ac||muted) return;
+  const t0=ac.currentTime+(delay||0);
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type=type||'square'; o.frequency.setValueAtTime(f,t0);
+  if(slide) o.frequency.exponentialRampToValueAtTime(slide,t0+dur);
+  g.gain.setValueAtTime(vol||.12,t0);
+  g.gain.exponentialRampToValueAtTime(.001,t0+dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t0); o.stop(t0+dur);
+}
+function noiseS(dur,freq,vol){
+  if(!ac||muted||!noiseBuf) return;
+  const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();
+  s.buffer=noiseBuf; f.type='bandpass'; f.frequency.value=freq;
+  g.gain.setValueAtTime(vol,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+dur);
+  s.connect(f); f.connect(g); g.connect(ac.destination);
+  s.start(); s.stop(ac.currentTime+dur);
+}
+const sfx={
+  tick(){ tone(700+Math.random()*120,.04,'sine',.06); },
+  pop(n){ tone(420+n*70,.14,'triangle',.15,(420+n*70)*1.6); },
+  atk(){ noiseS(.12,900,.14); tone(180,.12,'square',.1,80); },
+  heal(){ tone(660,.16,'sine',.12); tone(880,.2,'sine',.12,null,.1); },
+  ehit(){ noiseS(.16,300,.18); tone(120,.18,'square',.14,60); },
+  skill(){ tone(520,.3,'sawtooth',.14,1040); noiseS(.3,1400,.08); },
+  die(){ tone(300,.4,'sawtooth',.12,60); },
+  win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.22,'square',.13,null,i*.13)); },
+  lose(){ [400,340,280,200].forEach((f,i)=>tone(f,.3,'sawtooth',.1,null,i*.2)); },
+  danger(){ tone(220,.2,'square',.12); tone(220,.2,'square',.12,null,.25); },
+};
+document.getElementById('muteBtn').addEventListener('click',e=>{
+  muted=!muted; e.target.textContent=muted?'🔇':'🔊';
+});
+
+/* =========================================================
+   Game state
+   ========================================================= */
+const cvB=document.getElementById('board'), bctx=cvB.getContext('2d');
+let board=[];          // board[r][c] = orb {t,x,y,tx,ty,mode,pop,held}
+let state='menu';      // menu | idle | drag | resolving | over
+let player={hp:10000,maxHp:10000};
+let enemies=[], floor=0, turn=1, totalTurns=0, maxCombo=0;
+let held=null, heldPos={x:0,y:0}, moveStarted=false, moveT=0;
+let comboTexts=[], sparks=[];
+let lastTs=0;
+
+const TEAM_RCV=GIRLS.reduce((s,g)=>s+g.rcv,0);
+const skillCd=GIRLS.map(()=>0);
+
+const AFF=(a,d)=>{ // attacker elem vs defender elem
+  if(a===EL.FIRE&&d===EL.WOOD)return 2; if(a===EL.WOOD&&d===EL.WATER)return 2;
+  if(a===EL.WATER&&d===EL.FIRE)return 2; if(a===EL.LIGHT&&d===EL.DARK)return 2;
+  if(a===EL.DARK&&d===EL.LIGHT)return 2;
+  if(a===EL.FIRE&&d===EL.WATER)return .5; if(a===EL.WATER&&d===EL.WOOD)return .5;
+  if(a===EL.WOOD&&d===EL.FIRE)return .5;
+  return 1;
+};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const rnd=n=>Math.random()*n|0;
+
+/* =========================================================
+   Board setup & helpers
+   ========================================================= */
+function orbAt(r,c){ return board[r][c]; }
+function newOrb(t,r,c){
+  return {t, x:c*CS+CS/2, y:r*CS+CS/2, tx:c*CS+CS/2, ty:r*CS+CS/2, mode:null, pop:-1, held:false, vy:0};
+}
+function initBoard(){
+  board=[];
+  for(let r=0;r<ROWS;r++){
+    board.push([]);
+    for(let c=0;c<COLS;c++){
+      let t;
+      do{ t=rnd(6); }while(
+        (c>=2&&board[r][c-1].t===t&&board[r][c-2].t===t)||
+        (r>=2&&board[r-1][c].t===t&&board[r-2][c].t===t)
+      );
+      board[r].push(newOrb(t,r,c));
+    }
+  }
+}
+function findMatches(){
+  const mark=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+  for(let r=0;r<ROWS;r++){
+    let run=1;
+    for(let c=1;c<=COLS;c++){
+      if(c<COLS&&board[r][c].t===board[r][c-1].t) run++;
+      else{ if(run>=3) for(let k=c-run;k<c;k++) mark[r][k]=true; run=1; }
+    }
+  }
+  for(let c=0;c<COLS;c++){
+    let run=1;
+    for(let r=1;r<=ROWS;r++){
+      if(r<ROWS&&board[r][c].t===board[r-1][c].t) run++;
+      else{ if(run>=3) for(let k=r-run;k<r;k++) mark[k][c]=true; run=1; }
+    }
+  }
+  const seen=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+  const groups=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(!mark[r][c]||seen[r][c]) continue;
+    const t=board[r][c].t, cells=[], q=[[r,c]];
+    seen[r][c]=true;
+    while(q.length){
+      const [cr,cc]=q.pop(); cells.push({r:cr,c:cc});
+      for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nr=cr+dr,nc=cc+dc;
+        if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+        if(mark[nr][nc]&&!seen[nr][nc]&&board[nr][nc].t===t){ seen[nr][nc]=true; q.push([nr,nc]); }
+      }
+    }
+    groups.push({t,cells});
+  }
+  return groups;
+}
+function boardSettled(){
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const o=board[r][c];
+    if(!o) return false;
+    if(o.pop>=0) return false;
+    if(!o.held&&(Math.abs(o.x-o.tx)>1||Math.abs(o.y-o.ty)>1)) return false;
+  }
+  return true;
+}
+async function waitSettle(){ while(!boardSettled()) await sleep(50); }
+function collapse(){
+  for(let c=0;c<COLS;c++){
+    const stack=[];
+    for(let r=ROWS-1;r>=0;r--) if(board[r][c]) stack.push(board[r][c]);
+    let missing=ROWS-stack.length;
+    for(let i=0;i<stack.length;i++){
+      const r=ROWS-1-i, o=stack[i];
+      board[r][c]=o; o.tx=c*CS+CS/2; o.ty=r*CS+CS/2; o.mode='fall';
+    }
+    for(let i=0;i<missing;i++){
+      const r=missing-1-i;
+      const o=newOrb(rnd(6),r,c);
+      o.y=-(i+0.5)*CS-10; o.mode='fall'; o.vy=0;
+      board[r][c]=o;
+    }
+  }
+}
+
+/* =========================================================
+   Rendering
+   ========================================================= */
+function drawGlyph(g,t,x,y,s){
+  g.save(); g.translate(x,y); g.scale(s,s);
+  g.fillStyle='rgba(255,255,255,.92)';
+  g.strokeStyle='rgba(255,255,255,.92)';
+  g.beginPath();
+  if(t===EL.FIRE){
+    g.moveTo(0,-13); g.bezierCurveTo(10,-4,11,4,7,9);
+    g.bezierCurveTo(4,13,-4,13,-7,9); g.bezierCurveTo(-11,4,-8,-2,0,-13);
+    g.fill(); g.fillStyle=ELEMS[t].color;
+    g.beginPath(); g.moveTo(0,-3); g.bezierCurveTo(4,1,4,5,0,8); g.bezierCurveTo(-4,5,-4,1,0,-3); g.fill();
+  }else if(t===EL.WATER){
+    g.moveTo(0,-13); g.bezierCurveTo(9,-2,10,5,6,10);
+    g.bezierCurveTo(2,14,-2,14,-6,10); g.bezierCurveTo(-10,5,-9,-2,0,-13);
+    g.fill();
+  }else if(t===EL.WOOD){
+    g.moveTo(-10,10); g.quadraticCurveTo(-12,-8,10,-12);
+    g.quadraticCurveTo(12,8,-10,10); g.fill();
+    g.strokeStyle=ELEMS[t].color; g.lineWidth=1.8;
+    g.beginPath(); g.moveTo(-8,8); g.quadraticCurveTo(0,-2,9,-10); g.stroke();
+  }else if(t===EL.LIGHT){
+    for(let i=0;i<4;i++){
+      const a=i*Math.PI/2;
+      g.moveTo(0,0);
+      g.lineTo(Math.cos(a-.35)*5,Math.sin(a-.35)*5);
+      g.lineTo(Math.cos(a)*14,Math.sin(a)*14);
+      g.lineTo(Math.cos(a+.35)*5,Math.sin(a+.35)*5);
+    }
+    g.fill();
+    g.beginPath(); g.arc(0,0,4,0,Math.PI*2); g.fill();
+  }else if(t===EL.DARK){
+    g.moveTo(4,-13);
+    g.arc(0,0,13,-Math.PI/2,Math.PI/2,false);
+    g.arc(4,0,10.5,Math.PI/2,-Math.PI/2,true);
+    g.fill();
+  }else{
+    g.moveTo(0,12);
+    g.bezierCurveTo(-14,2,-12,-10,-4,-9); g.bezierCurveTo(-1,-8.5,0,-6,0,-4.5);
+    g.bezierCurveTo(0,-6,1,-8.5,4,-9); g.bezierCurveTo(12,-10,14,2,0,12);
+    g.fill();
+  }
+  g.restore();
+}
+function drawOrb(g,t,x,y,r){
+  const e=ELEMS[t];
+  const gr=g.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r);
+  gr.addColorStop(0,e.hi); gr.addColorStop(.55,e.color); gr.addColorStop(1,e.lo);
+  g.fillStyle=gr;
+  g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
+  g.strokeStyle='rgba(0,0,0,.35)'; g.lineWidth=2; g.stroke();
+  drawGlyph(g,t,x,y+1,r/26);
+  g.fillStyle='rgba(255,255,255,.55)';
+  g.beginPath(); g.ellipse(x-r*.3,y-r*.5,r*.36,r*.18,-.6,0,Math.PI*2); g.fill();
+}
+function drawBoard(ts,dt){
+  bctx.clearRect(0,0,540,450);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    bctx.fillStyle=(r+c)%2?'#241a10':'#2c2014';
+    bctx.fillRect(c*CS,r*CS,CS,CS);
+  }
+  // move timer tint
+  if(moveStarted&&held){
+    bctx.fillStyle='rgba(90,200,255,.05)';
+    bctx.fillRect(0,0,540,450);
+  }
+  // orbs
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const o=board[r][c];
+    if(!o) continue;
+    // motion
+    if(o.mode==='fall'){
+      if(o.y<o.ty){ o.vy+=2600*dt; o.y=Math.min(o.ty,o.y+o.vy*dt); if(o.y>=o.ty)o.vy=0; }
+      else { o.y=o.ty; o.mode=null; }
+      o.x+=(o.tx-o.x)*Math.min(1,dt*20);
+    }else{
+      o.x+=(o.tx-o.x)*Math.min(1,dt*22);
+      o.y+=(o.ty-o.y)*Math.min(1,dt*22);
+    }
+    if(o.held) continue;
+    if(o.pop>=0){
+      o.pop+=dt*4.5;
+      const k=Math.min(1,o.pop);
+      bctx.globalAlpha=1-k;
+      drawOrb(bctx,o.t,o.x,o.y,38*(1+k*.4));
+      bctx.globalAlpha=1;
+      continue;
+    }
+    drawOrb(bctx,o.t,o.x,o.y,38);
+  }
+  // held orb ghost + floating orb
+  if(held){
+    const o=board[held.r][held.c];
+    bctx.globalAlpha=.35;
+    drawOrb(bctx,o.t,held.c*CS+CS/2,held.r*CS+CS/2,36);
+    bctx.globalAlpha=.94;
+    drawOrb(bctx,o.t,heldPos.x,heldPos.y-6,44);
+    bctx.globalAlpha=1;
+  }
+  // sparks
+  for(let i=sparks.length-1;i>=0;i--){
+    const p=sparks[i];
+    p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=500*dt; p.life-=dt;
+    if(p.life<=0){ sparks.splice(i,1); continue; }
+    bctx.globalAlpha=Math.max(0,p.life/p.max);
+    bctx.fillStyle=p.color;
+    bctx.beginPath(); bctx.arc(p.x,p.y,p.r,0,Math.PI*2); bctx.fill();
+  }
+  bctx.globalAlpha=1;
+  // combo texts
+  bctx.textAlign='center';
+  for(let i=comboTexts.length-1;i>=0;i--){
+    const t=comboTexts[i];
+    t.life-=dt; t.y-=dt*26;
+    if(t.life<=0){ comboTexts.splice(i,1); continue; }
+    bctx.globalAlpha=Math.min(1,t.life*2.5);
+    bctx.font="800 24px 'Mochiy Pop One','M PLUS Rounded 1c',sans-serif";
+    bctx.lineWidth=5; bctx.strokeStyle='#000';
+    bctx.strokeText(t.txt,t.x,t.y);
+    bctx.fillStyle=t.color;
+    bctx.fillText(t.txt,t.x,t.y);
+  }
+  bctx.globalAlpha=1;
+}
+function frame(ts){
+  const dt=Math.min(.05,(ts-lastTs)/1000||.016);
+  lastTs=ts;
+  if(moveStarted&&held){
+    moveT-=dt;
+    document.getElementById('moveBar').style.width=Math.max(0,moveT/MOVE_TIME*100)+'%';
+    if(moveT<=0) endMove();
+  }
+  drawBoard(ts,dt);
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   Input (pointer)
+   ========================================================= */
+function boardPos(e){
+  const r=cvB.getBoundingClientRect();
+  return { x:(e.clientX-r.left)*(540/r.width), y:(e.clientY-r.top)*(450/r.height) };
+}
+function cellAt(x,y){
+  const c=Math.floor(x/CS), r=Math.floor(y/CS);
+  if(r<0||r>=ROWS||c<0||c>=COLS) return null;
+  return {r,c};
+}
+cvB.addEventListener('pointerdown',e=>{
+  initAudio(); if(ac&&ac.state==='suspended')ac.resume();
+  if(state!=='idle') return;
+  const p=boardPos(e), cell=cellAt(p.x,p.y);
+  if(!cell) return;
+  cvB.setPointerCapture(e.pointerId);
+  held=cell; heldPos=p; moveStarted=false;
+  board[cell.r][cell.c].held=true;
+  state='drag';
+});
+cvB.addEventListener('pointermove',e=>{
+  if(state!=='drag'||!held) return;
+  const p=boardPos(e);
+  heldPos={x:Math.max(6,Math.min(534,p.x)), y:Math.max(6,Math.min(444,p.y))};
+  let cell=cellAt(heldPos.x,heldPos.y);
+  if(!cell) return;
+  let guard=12;
+  while((cell.r!==held.r||cell.c!==held.c)&&guard-->0){
+    const dr=Math.sign(cell.r-held.r), dc=Math.sign(cell.c-held.c);
+    swapHeld(held.r+dr,held.c+dc);
+  }
+});
+addEventListener('pointerup',()=>{ if(state==='drag') endMove(); });
+addEventListener('pointercancel',()=>{ if(state==='drag') endMove(); });
+function swapHeld(nr,nc){
+  const a=board[held.r][held.c], b=board[nr][nc];
+  board[held.r][held.c]=b; board[nr][nc]=a;
+  b.tx=held.c*CS+CS/2; b.ty=held.r*CS+CS/2; b.mode=null;
+  held={r:nr,c:nc};
+  if(!moveStarted){ moveStarted=true; moveT=MOVE_TIME; }
+  sfx.tick();
+}
+function endMove(){
+  if(!held) return;
+  const o=board[held.r][held.c];
+  o.held=false; o.tx=held.c*CS+CS/2; o.ty=held.r*CS+CS/2;
+  o.x=heldPos.x; o.y=heldPos.y-6;
+  const moved=moveStarted;
+  held=null; moveStarted=false;
+  document.getElementById('moveBar').style.width='100%';
+  if(moved) resolveBoard();
+  else state='idle';
+}
+
+/* =========================================================
+   Resolve / battle flow
+   ========================================================= */
+async function resolveBoard(){
+  state='resolving';
+  await waitSettle();
+  const combos=[];
+  while(true){
+    const groups=findMatches();
+    if(!groups.length) break;
+    for(const gp of groups){
+      combos.push(gp);
+      let cx=0,cy=0;
+      for(const cell of gp.cells){ cx+=cell.c*CS+CS/2; cy+=cell.r*CS+CS/2; board[cell.r][cell.c].pop=0; }
+      cx/=gp.cells.length; cy/=gp.cells.length;
+      comboTexts.push({txt:combos.length+'コンボ!',x:Math.max(56,Math.min(484,cx)),y:cy,life:1,color:ELEMS[gp.t].color});
+      const big=document.getElementById('comboBig');
+      big.textContent=combos.length+' COMBO!!';
+      big.classList.remove('show'); void big.offsetWidth; big.classList.add('show');
+      sfx.pop(combos.length);
+      for(const cell of gp.cells)
+        for(let k=0;k<4;k++)
+          sparks.push({x:cell.c*CS+CS/2,y:cell.r*CS+CS/2,vx:(Math.random()-.5)*260,vy:-Math.random()*220,life:.5,max:.5,r:3+Math.random()*3,color:ELEMS[gp.t].hi});
+      await sleep(300);
+      for(const cell of gp.cells) board[cell.r][cell.c]=null;
+    }
+    collapse();
+    await waitSettle();
+  }
+  maxCombo=Math.max(maxCombo,combos.length);
+  if(combos.length) await attackPhase(combos);
+  else{ showMsg('コンボなし…'); await sleep(500); }
+  setTimeout(()=>document.getElementById('comboBig').classList.remove('show'),700);
+  if(state==='over') return;
+  await enemyPhase();
+  if(state==='over') return;
+  turn++; totalTurns++;
+  document.getElementById('turnLbl').textContent='TURN '+turn;
+  for(let i=0;i<skillCd.length;i++) skillCd[i]=Math.max(0,skillCd[i]-1);
+  renderTeam();
+  state='idle';
+}
+function aliveEnemies(){ return enemies.filter(e=>e.hp>0); }
+async function attackPhase(combos){
+  const mult=1+(combos.length-1)*.25;
+  // damage per element
+  const dmgByElem={};
+  let healPow=0;
+  for(const gp of combos){
+    const n=gp.cells.length, base=1+(n-3)*.25;
+    if(gp.t===EL.HEART) healPow+=TEAM_RCV*base;
+    else{
+      const atk=GIRLS.filter(g=>g.elem===gp.t).reduce((s,g)=>s+g.atk,0);
+      if(atk>0) dmgByElem[gp.t]=(dmgByElem[gp.t]||0)+atk*base;
+    }
+  }
+  for(const tStr of Object.keys(dmgByElem)){
+    const t=+tStr;
+    const target=aliveEnemies()[0];
+    if(!target) break;
+    const gi=GIRLS.findIndex(g=>g.elem===t);
+    const gel=document.querySelectorAll('.girl')[gi];
+    if(gel){ gel.classList.remove('attack'); void gel.offsetWidth; gel.classList.add('attack'); }
+    const aff=AFF(t,target.elem);
+    const dmg=Math.round(dmgByElem[t]*mult*aff);
+    await sleep(160);
+    hitEnemy(target,dmg,t,aff);
+    await sleep(240);
+    if(!aliveEnemies().length) break;
+  }
+  if(healPow>0){
+    const heal=Math.round(healPow*mult);
+    player.hp=Math.min(player.maxHp,player.hp+heal);
+    const hf=document.getElementById('healFx');
+    hf.textContent='+'+heal.toLocaleString();
+    hf.classList.remove('show'); void hf.offsetWidth; hf.classList.add('show');
+    sfx.heal(); updateHP();
+    await sleep(300);
+  }
+  if(!aliveEnemies().length) await nextFloorOrWin();
+}
+function hitEnemy(en,dmg,elem,aff){
+  en.hp=Math.max(0,en.hp-dmg);
+  en.el.classList.remove('hit'); void en.el.offsetWidth; en.el.classList.add('hit');
+  sfx.ehit();
+  popupDmg(en, dmg.toLocaleString()+(aff>1?'!':''), ELEMS[elem].color);
+  en.el.querySelector('.ehp i').style.width=(en.hp/en.maxHp*100)+'%';
+  if(en.hp<=0){
+    en.el.classList.add('dead');
+    sfx.die();
+  }else if(en.boss&&!en.enraged&&en.hp<=en.maxHp*.3){
+    en.enraged=true; en.atk=Math.round(en.atk*1.4);
+    showMsg('ヴェルザードは怒り狂った！ 攻撃力アップ！');
+    sfx.danger();
+  }
+}
+function popupDmg(en,text,color){
+  const area=document.getElementById('battleArea');
+  const er=en.el.getBoundingClientRect(), ar=area.getBoundingClientRect();
+  const d=document.createElement('div');
+  d.className='dmg'; d.textContent=text; d.style.color=color;
+  d.style.left=(er.left-ar.left+er.width/2+(Math.random()*30-15))/ar.width*100+'%';
+  d.style.top=(er.top-ar.top+er.height*.3)/ar.height*100+'%';
+  area.appendChild(d);
+  setTimeout(()=>d.remove(),1000);
+}
+async function enemyPhase(){
+  for(const en of aliveEnemies()){
+    en.cd--;
+    updateCdBadge(en);
+  }
+  for(const en of aliveEnemies()){
+    if(en.cd>0) continue;
+    await sleep(250);
+    en.el.classList.add('atk');
+    sfx.atk();
+    await sleep(200);
+    en.el.classList.remove('atk');
+    player.hp=Math.max(0,player.hp-en.atk);
+    const flash=document.getElementById('flash');
+    flash.style.opacity=1; setTimeout(()=>flash.style.opacity=0,180);
+    const scr=document.getElementById('screen');
+    scr.style.transition='none';
+    scr.style.transform=SCR_SCALE+' translateX(-8px)';
+    setTimeout(()=>{scr.style.transform=SCR_SCALE+' translateX(6px)';},70);
+    setTimeout(()=>{scr.style.transform=SCR_SCALE;},140);
+    popupPlayerDmg(en.atk);
+    updateHP();
+    en.cd=en.cdMax;
+    updateCdBadge(en);
+    await sleep(350);
+    if(player.hp<=0){ defeat(); return; }
+  }
+}
+function popupPlayerDmg(dmg){
+  const area=document.getElementById('battleArea');
+  const d=document.createElement('div');
+  d.className='dmg'; d.textContent='-'+dmg.toLocaleString(); d.style.color='#ff5b5b';
+  d.style.left='50%'; d.style.top='78%';
+  area.appendChild(d);
+  setTimeout(()=>d.remove(),1000);
+}
+function updateCdBadge(en){
+  const b=en.el.querySelector('.ecd');
+  b.textContent=Math.max(0,en.cd);
+  b.classList.toggle('danger',en.cd<=1);
+}
+function updateHP(){
+  const k=player.hp/player.maxHp;
+  const f=document.getElementById('hpFill');
+  f.style.width=k*100+'%';
+  f.style.background=k>.5?'linear-gradient(#8dff7a,#2ec94e)':k>.25?'linear-gradient(#ffe45e,#f0a818)':'linear-gradient(#ff8a7a,#e0301f)';
+  document.getElementById('hpTxt').textContent=player.hp.toLocaleString()+' / '+player.maxHp.toLocaleString();
+}
+function showMsg(t,dur){
+  const m=document.getElementById('msg');
+  m.textContent=t; m.classList.add('show');
+  clearTimeout(m._t);
+  m._t=setTimeout(()=>m.classList.remove('show'),dur||1600);
+}
+
+/* =========================================================
+   Floors
+   ========================================================= */
+function spawnFloor(){
+  const wrap=document.getElementById('enemies');
+  wrap.innerHTML='';
+  enemies=FLOORS[floor].map(def=>{
+    const el=document.createElement('div');
+    el.className='enemy';
+    el.innerHTML=`<div class="ecd">${def.cd}</div><div class="sprite">${def.svg()}</div>
+      <div class="ehp"><i style="width:100%"></i></div><div class="ename">${def.name}</div>`;
+    wrap.appendChild(el);
+    return {...def, maxHp:def.hp, cdMax:def.cd, el, enraged:false};
+  });
+  document.getElementById('floorLbl').textContent=
+    floor===FLOORS.length-1 ? 'BOSS バトル 3/3' : `バトル ${floor+1}/3`;
+  showMsg(floor===FLOORS.length-1?'ボス出現！！':`バトル ${floor+1} スタート！`);
+  if(floor===FLOORS.length-1) sfx.danger();
+}
+async function nextFloorOrWin(){
+  if(floor<FLOORS.length-1){
+    await sleep(700);
+    floor++;
+    spawnFloor();
+  }else{
+    await sleep(600);
+    victory();
+  }
+}
+
+/* =========================================================
+   Skills
+   ========================================================= */
+function skillToast(t){
+  const s=document.getElementById('skillToast');
+  s.textContent=t;
+  s.classList.remove('show'); void s.offsetWidth; s.classList.add('show');
+}
+async function useSkill(i){
+  if(state!=='idle'||skillCd[i]>0) return;
+  const g=GIRLS[i];
+  skillCd[i]=g.skill.cd;
+  sfx.skill();
+  skillToast(g.name+'「'+g.skill.name+'」');
+  state='resolving';
+  await sleep(500);
+  if(g.id==='hina'){
+    const t=aliveEnemies()[0];
+    if(t){ hitEnemy(t,Math.round(g.atk*10*AFF(EL.FIRE,t.elem)),EL.FIRE,AFF(EL.FIRE,t.elem)); }
+    if(!aliveEnemies().length){ await nextFloorOrWin(); }
+  }else if(g.id==='mio'){
+    const heal=Math.round(player.maxHp*.4);
+    player.hp=Math.min(player.maxHp,player.hp+heal);
+    const hf=document.getElementById('healFx');
+    hf.textContent='+'+heal.toLocaleString();
+    hf.classList.remove('show'); void hf.offsetWidth; hf.classList.add('show');
+    sfx.heal(); updateHP();
+  }else if(g.id==='konoha'){
+    for(const en of aliveEnemies()){ en.cd+=2; updateCdBadge(en); popupDmg(en,'遅延!','#8be07a'); }
+  }else if(g.id==='luna'){
+    const cand=[];
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(board[r][c].t!==EL.LIGHT) cand.push([r,c]);
+    for(let k=0;k<6&&cand.length;k++){
+      const [r,c]=cand.splice(rnd(cand.length),1)[0];
+      board[r][c].t=EL.LIGHT;
+      for(let j=0;j<5;j++) sparks.push({x:c*CS+CS/2,y:r*CS+CS/2,vx:(Math.random()-.5)*200,vy:-Math.random()*200,life:.5,max:.5,r:3,color:'#fff3b8'});
+    }
+  }else if(g.id==='yoru'){
+    for(const en of aliveEnemies()){
+      const d=Math.round(en.hp*.25);
+      hitEnemy(en,d,EL.DARK,1);
+    }
+    if(!aliveEnemies().length){ await nextFloorOrWin(); }
+  }
+  renderTeam();
+  await sleep(400);
+  if(state!=='over') state='idle';
+}
+
+/* =========================================================
+   Team UI
+   ========================================================= */
+function renderTeam(){
+  const wrap=document.getElementById('team');
+  if(!wrap.children.length){
+    GIRLS.forEach((g,i)=>{
+      const d=document.createElement('div');
+      d.className='girl';
+      d.style.borderColor=ELEMS[g.elem].color;
+      d.innerHTML=GIRL_ART[i].portrait(false)
+        +`<div class="lv">${ELEMS[g.elem].name}</div>`
+        +`<div class="cdov"></div><div class="skillrdy">SKILL!</div>`;
+      d.title=g.name+'「'+g.skill.name+'」: '+g.skill.desc+'（'+g.skill.cd+'ターン）';
+      d.addEventListener('click',()=>useSkill(i));
+      wrap.appendChild(d);
+    });
+  }
+  document.querySelectorAll('.girl').forEach((el,i)=>{
+    const cd=skillCd[i];
+    const ov=el.querySelector('.cdov');
+    if(cd>0){ ov.style.display='flex'; ov.textContent=cd; el.classList.remove('ready'); }
+    else{ ov.style.display='none'; el.classList.add('ready'); }
+  });
+}
+
+/* =========================================================
+   Match flow
+   ========================================================= */
+function startQuest(){
+  player.hp=player.maxHp;
+  floor=0; turn=1; totalTurns=0; maxCombo=0;
+  for(let i=0;i<GIRLS.length;i++) skillCd[i]=Math.max(2,GIRLS[i].skill.cd-5);
+  initBoard();
+  comboTexts=[]; sparks=[]; held=null; moveStarted=false;
+  document.getElementById('menu').style.display='none';
+  document.getElementById('result').style.display='none';
+  document.getElementById('turnLbl').textContent='TURN 1';
+  document.getElementById('moveBar').style.width='100%';
+  updateHP(); renderTeam(); spawnFloor();
+  state='idle';
+}
+function victory(){
+  state='over';
+  sfx.win();
+  const r=document.getElementById('result');
+  document.getElementById('resTitle').textContent='クエスト クリア！';
+  document.getElementById('resTitle').className='win';
+  document.getElementById('resStats').innerHTML=
+    `最大コンボ <span>${maxCombo}</span> コンボ<br>クリアターン <span>${totalTurns+1}</span> ターン<br>残りHP <span>${player.hp.toLocaleString()}</span>`;
+  setTimeout(()=>r.style.display='flex',900);
+}
+function defeat(){
+  state='over';
+  sfx.lose();
+  const r=document.getElementById('result');
+  document.getElementById('resTitle').textContent='やられた…';
+  document.getElementById('resTitle').className='lose';
+  document.getElementById('resStats').innerHTML=
+    `たどりついたバトル <span>${floor+1}/3</span><br>最大コンボ <span>${maxCombo}</span> コンボ<br>スキルを活用してリベンジしよう！`;
+  setTimeout(()=>r.style.display='flex',900);
+}
+document.getElementById('startBtn').addEventListener('click',()=>{ initAudio(); if(ac&&ac.state==='suspended')ac.resume(); startQuest(); });
+document.getElementById('retryBtn').addEventListener('click',()=>{ startQuest(); });
+
+/* =========================================================
+   Title screen
+   ========================================================= */
+function buildTitle(){
+  document.getElementById('titleGirls').innerHTML=GIRLS.map((g,i)=>`
+    <div class="tg">
+      <div class="pf" style="border-color:${ELEMS[g.elem].color}">${GIRL_ART[i].portrait(true)}</div>
+      <div class="nm">${g.name}</div>
+      <div class="el" style="background:${ELEMS[g.elem].color}">${ELEMS[g.elem].name}属性</div>
+    </div>`).join('');
+}
+
+/* ---------- scale to fit ---------- */
+let SCR_SCALE='';
+function resize(){
+  const s=Math.min(innerWidth/560,innerHeight/1010);
+  SCR_SCALE=`scale(${s})`;
+  document.getElementById('screen').style.transform=SCR_SCALE;
+}
+addEventListener('resize',resize);
+
+/* ---------- init ---------- */
+initBoard();
+buildTitle();
+renderTeam();
+updateHP();
+resize();
+requestAnimationFrame(frame);
+
+/* debug hooks */
+window.G={get state(){return state}, set state(v){state=v}, player, get enemies(){return enemies}, get board(){return board}, get maxCombo(){return maxCombo}, resolveBoard, useSkill, startQuest, get floor(){return floor}};
+</script>
+</body>
+</html>
