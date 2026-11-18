@@ -20,3 +20,9 @@ node_modules/
 
 # OS
 .DS_Store
+
+# 学習用お手本（他の人の動画のスクショ・台本を含むため公開リポジトリに上げない）
+learning/references/scripts/*
+learning/references/frames/*
+!learning/references/scripts/.gitkeep
+!learning/references/frames/.gitkeep

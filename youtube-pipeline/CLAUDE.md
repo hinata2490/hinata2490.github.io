@@ -112,6 +112,14 @@ python pipeline.py --dry-run
 - [ ] チャンネル名・詳細方針の決定
 - [ ] 本番用動画を1本生成してYouTubeにアップ
 
+## 学習の方針（2026-11 追加）
+- 「良い台本・良い画面」を**言葉のルールで教えるのをやめ、お手本の実物と差分で教える**
+  （言語化すると良さの大部分がこぼれるため。ルールは必要条件にしかならない）
+- 台本生成: お手本台本の原文＋過去の修正ペアを見せて下書き → お手本と並べて「違い」だけ挙げて書き直し（`steps/script.py`, `steps/learning.py`）
+- 再学習: オーナーが `output/scripts/*.txt` を直す → `python tools/relearn.py` で before/after を `learning/corrections/` に保存し、次回から自動で反映
+- 画面: `python tools/visual_check.py` でRemotionのコマとお手本スクショを並べて差分レポート
+- 使い方の詳細は `learning/README.md`
+
 ## 設定ファイル
 - `config.yaml` - チャンネル・パイプライン設定
 - `.env` - APIキー

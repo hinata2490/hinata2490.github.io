@@ -1,7 +1,7 @@
 # YouTube 自動化パイプライン 依存パッケージ
 
 # Claude API
-anthropic>=0.40.0
+anthropic>=2.10.0       # Opus 5.5・フォールバック対応のため
 
 # YouTube Data API
 google-api-python-client>=2.100.0

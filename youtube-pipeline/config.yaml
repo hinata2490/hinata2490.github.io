@@ -63,6 +63,16 @@ script:
   output_dir: "output/scripts"
 
 # ----------------------------------------
+# 学習（お手本・修正履歴を台本生成に反映）
+#   learning/README.md を参照
+# ----------------------------------------
+learning:
+  model: "claude-opus-5-5"
+  compare_and_revise: true     # 生成後にお手本と見比べて書き直す
+  max_reference_scripts: 5     # 一度に見せるお手本台本の数
+  max_corrections: 8           # 一度に見せる過去の修正の数
+
+# ----------------------------------------
 # Step 3: 音声生成
 # ----------------------------------------
 audio:

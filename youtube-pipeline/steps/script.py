@@ -12,6 +12,8 @@ from typing import Any
 
 import anthropic
 
+from steps import learning
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +25,8 @@ SCRIPT_SYSTEM = """\
 あなたは睡眠特化 YouTube チャンネルの台本ライターです。
 
 ## チャンネルコンセプト
-- 睡眠の悩みを持つ30〜50代をメインターゲット
+- 睡眠不足・眠りが浅い・疲れが取れない20〜30代がメインターゲット
+- 語り手は夢乃レム（落ち着いていて、視聴者に寄り添う口調。煽り・強い言葉はNG）
 - 科学的根拠に基づいた実践的な情報を提供
 - 視聴者が「今夜から試せる」内容を必ず含める
 - 親しみやすく、専門的すぎない語り口
@@ -32,7 +35,6 @@ SCRIPT_SYSTEM = """\
 - 話し言葉で書く（「〜です」「〜ますよね」等）
 - 一文は短く（読み上げで1〜2秒程度）
 - 【間】と書いた部分は音声合成で間を取る
-- (SE: 効果音名) で効果音指示を入れる
 - 数字は読み方も括弧内に書く (例: 8時間(はちじかん))
 """
 
@@ -76,13 +78,67 @@ SCRIPT_USER = """\
 # 台本生成
 # ---------------------------------------------------------------------------
 
+COMPARE_PROMPT = """\
+あなたが書いた台本と、お手本台本を並べて読み比べてください。
+
+手順:
+1. 「良い台本の条件」を一般論で考えるのではなく、お手本と自分の台本で
+   実際に違っている箇所だけを最大10個挙げる（語り口・一文の長さ・テンポ・
+   具体例の出し方・話の運び方など）。過去の修正と同じズレがあればそれも挙げる。
+2. その違いを埋めるように台本を書き直す。内容（トピック・科学的事実）は変えない。
+
+出力は次の JSON のみ:
+{{
+  "differences": ["違い1", "違い2", ...],
+  "script": {{ 書き直した台本。元と同じ JSON 形式 }}
+}}
+
+## あなたが書いた台本
+{draft}
+"""
+
+
+def _parse_json(text: str) -> dict | None:
+    match = re.search(r'\{.*\}', text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group())
+    except json.JSONDecodeError:
+        return None
+
+
+def build_system_prompt(cfg: dict[str, Any]) -> list[dict]:
+    """ルール + お手本の原文 + 過去の修正 を system に積む（キャッシュ対象）"""
+    lcfg = learning.learning_cfg(cfg)
+    refs = learning.load_reference_scripts(lcfg["max_reference_scripts"])
+    corrections = learning.load_corrections(lcfg["max_corrections"])
+    logger.info(f"学習データ: お手本台本 {len(refs)} 本 / 修正履歴 {len(corrections)} 件")
+
+    parts = [SCRIPT_SYSTEM]
+    persona = cfg.get("script", {}).get("persona")
+    if persona:
+        parts.append("## 語り手の人物像\n" + persona)
+    for block in (learning.build_reference_block(refs), learning.build_corrections_block(corrections)):
+        if block:
+            parts.append(block)
+    return [{"type": "text", "text": "\n\n".join(parts), "cache_control": {"type": "ephemeral"}}]
+
+
 def generate_script(
     topic: dict,
     cfg: dict[str, Any],
     client: anthropic.Anthropic,
 ) -> dict:
-    """Claude API を使って台本を生成する"""
-    duration = cfg["target_duration_minutes"]
+    """台本を生成する。
+
+    1. お手本台本の原文と過去の修正を見せて下書きを書かせる
+    2. お手本と下書きを並べて「違い」だけを挙げさせ、書き直させる
+    """
+    script_cfg = cfg["script"]
+    lcfg = learning.learning_cfg(cfg)
+    model = lcfg["model"]
+    duration = script_cfg["target_duration_minutes"]
     total_sec = duration * 60
     main_seconds = total_sec - 30 - 20 - 30 - 20  # フック+自己紹介+まとめ+アウトロ除く
 
@@ -94,38 +150,72 @@ def generate_script(
         key_points="、".join(topic.get("key_points", [])),
         main_seconds=main_seconds,
     )
+    system = build_system_prompt(cfg)
 
     logger.info(f"台本生成中: {topic.get('title', '')}")
+    text = learning.call_claude(client, model, system, user_prompt)
+    script_data = _parse_json(text)
 
-    response = client.messages.create(
-        model=cfg["model"],
-        max_tokens=4000,
-        system=SCRIPT_SYSTEM,
-        messages=[{"role": "user", "content": user_prompt}],
-    )
-
-    text = response.content[0].text.strip()
-
-    # JSON 抽出
-    match = re.search(r'\{.*\}', text, re.DOTALL)
-    if match:
-        script_data = json.loads(match.group())
-    else:
+    if script_data is None:
         logger.error("台本 JSON のパースに失敗しました。生テキストを返します。")
-        script_data = {
+        return {
             "video_title": topic.get("title", "untitled"),
             "video_description": "",
             "tags": [],
             "sections": [{"name": "full", "label": "全文", "duration_sec": total_sec, "text": text}],
             "total_chars": len(text),
             "estimated_duration_min": duration,
+            "topic": topic,
+            "generated_at": datetime.now().isoformat(),
         }
+
+    # お手本と並べて比べ、差分だけ埋める
+    has_refs = bool(learning.load_reference_scripts(1) or learning.load_corrections(1))
+    if lcfg["compare_and_revise"] and has_refs:
+        logger.info("お手本と比較して書き直し中...")
+        draft = json.dumps(script_data, ensure_ascii=False, indent=2)
+        revised_text = learning.call_claude(
+            client, model, system, COMPARE_PROMPT.format(draft=draft)
+        )
+        revised = _parse_json(revised_text)
+        if revised and isinstance(revised.get("script"), dict) and revised["script"].get("sections"):
+            script_data = revised["script"]
+            script_data["revision_differences"] = revised.get("differences", [])
+            for d in script_data["revision_differences"]:
+                logger.info(f"  修正した違い: {d}")
+        else:
+            logger.warning("書き直し結果を読めなかったので下書きを使います")
 
     # メタ情報を付加
     script_data["topic"] = topic
     script_data["generated_at"] = datetime.now().isoformat()
 
     return script_data
+
+
+def write_script_txt(script_data: dict, path: Path) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(f"# {script_data.get('video_title', '')}\n\n")
+        for section in script_data.get("sections", []):
+            f.write(f"## {section.get('label', section.get('name', ''))} ({section.get('duration_sec', '?')}秒)\n\n")
+            f.write(section["text"] + "\n\n")
+
+
+def read_script_txt(path: Path) -> list[dict]:
+    """write_script_txt で書いた（オーナーが手直しした）.txt を section リストに戻す"""
+    sections: list[dict] = []
+    current: dict | None = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"^##\s+(.+?)\s*(?:\((\S+?)秒\))?\s*$", line)
+        if m:
+            current = {"label": m.group(1), "lines": []}
+            sections.append(current)
+        elif current is not None:
+            current["lines"].append(line)
+    return [
+        {"label": s["label"], "text": "\n".join(s["lines"]).strip()}
+        for s in sections
+    ]
 
 
 def extract_full_text(script_data: dict) -> str:
@@ -158,7 +248,6 @@ def run(
     Returns:
         台本データ (dict)
     """
-    script_cfg = cfg["script"]
     output_dir = Path(cfg["pipeline"]["output_base"]) / "scripts"
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -174,19 +263,16 @@ def run(
             return json.load(f)
 
     client = anthropic.Anthropic(api_key=api_keys["ANTHROPIC_API_KEY"])
-    script_data = generate_script(topic, script_cfg, client)
+    script_data = generate_script(topic, cfg, client)
 
     # 保存
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(script_data, f, ensure_ascii=False, indent=2)
 
-    # 台本テキストも別ファイルで保存（確認用）
+    # 台本テキストも別ファイルで保存（確認・手直し用）
+    # オーナーはこの .txt を直接直す → tools/relearn.py で修正を学習データにする
     text_path = output_path.with_suffix(".txt")
-    with open(text_path, "w", encoding="utf-8") as f:
-        f.write(f"# {script_data.get('video_title', '')}\n\n")
-        for section in script_data.get("sections", []):
-            f.write(f"## {section['label']} ({section['duration_sec']}秒)\n\n")
-            f.write(section["text"] + "\n\n")
+    write_script_txt(script_data, text_path)
 
     logger.info(f"台本保存完了: {output_path}")
     return script_data
