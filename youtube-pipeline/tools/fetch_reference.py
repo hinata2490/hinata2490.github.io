@@ -42,6 +42,75 @@ def _tool(name: str) -> str:
     sys.exit(f"{name} が見つかりません。FFmpeg をインストールしてください。")
 
 
+METRICS_DIR = learning.LEARNING_DIR / "references" / "metrics"
+
+
+def run_ytdlp(args: list[str], check: bool = True) -> subprocess.CompletedProcess:
+    """yt-dlp を実行。YouTube 用の JS 実行環境として Node.js を使う（無い版では外して再実行）"""
+    base = [sys.executable, "-m", "yt_dlp", "--no-warnings"]
+    r = subprocess.run(base + ["--js-runtimes", "node"] + args, capture_output=True, text=True)
+    if r.returncode != 0 and "js-runtimes" in (r.stderr or ""):
+        r = subprocess.run(base + args, capture_output=True, text=True)
+    if check and r.returncode != 0:
+        raise RuntimeError(f"yt-dlp 失敗: {(r.stderr or '').strip()[-500:]}")
+    return r
+
+
+def _ts(t: str) -> float:
+    parts = t.replace(",", ".").split(":")
+    return sum(float(x) * 60 ** i for i, x in enumerate(reversed(parts)))
+
+
+def vtt_cues(vtt: str) -> list[tuple[float, float, str]]:
+    cues, cur = [], None
+    for line in vtt.splitlines():
+        m = re.match(r"^\s*([\d:.,]+)\s*-->\s*([\d:.,]+)", line)
+        if m:
+            cur = [_ts(m.group(1)), _ts(m.group(2)), ""]
+            cues.append(cur)
+        elif cur is not None and line.strip():
+            cur[2] += re.sub(r"<[^>]+>", "", line.strip())
+    return [(a, b, t) for a, b, t in cues if t and b > a]
+
+
+def edit_metrics(video: Path, vtt: str | None = None, max_sec: int = 300) -> dict:
+    """編集テンポを数値で測る（言語化ではなく測定値）。冒頭 max_sec 秒が対象。"""
+    dur = duration_sec(video)
+    span = min(dur, max_sec)
+    r = subprocess.run(
+        [_tool("ffmpeg"), "-hide_banner", "-t", str(span), "-i", str(video),
+         "-vf", "scale=320:-2,select='gt(scene,0.25)',showinfo", "-an", "-f", "null", "-"],
+        capture_output=True, text=True,
+    )
+    cuts = [float(x) for x in re.findall(r"pts_time:([\d.]+)", r.stderr)]
+    gaps = [b - a for a, b in zip([0.0] + cuts, cuts + [span])]
+    m = {
+        "duration_sec": round(dur, 1),
+        "measured_sec": round(span, 1),
+        "screen_changes_per_min": round(len(cuts) / span * 60, 1) if span else 0,
+        "median_sec_between_changes": round(sorted(gaps)[len(gaps) // 2], 2) if gaps else None,
+    }
+    if vtt:
+        cues = vtt_cues(vtt)
+        if cues:
+            durs = sorted(b - a for a, b, _ in cues)
+            chars = [len(t) for _, _, t in cues]
+            m.update({
+                "subtitle_cues": len(cues),
+                "median_subtitle_sec": round(durs[len(durs) // 2], 2),
+                "median_subtitle_chars": sorted(chars)[len(chars) // 2],
+                "chars_per_sec": round(sum(chars) / max(sum(durs), 0.1), 1),
+            })
+    return m
+
+
+def save_metrics(name: str, metrics: dict, extra: dict | None = None) -> Path:
+    METRICS_DIR.mkdir(parents=True, exist_ok=True)
+    out = METRICS_DIR / f"{name}.json"
+    out.write_text(json.dumps({**(extra or {}), **metrics}, ensure_ascii=False, indent=2), encoding="utf-8")
+    return out
+
+
 def safe_name(s: str) -> str:
     return re.sub(r'[\\/:*?"<>|\s]+', "_", s).strip("_")[:40] or "reference"
 
@@ -87,41 +156,41 @@ def extract_frames(video: Path, name: str, n: int) -> list[Path]:
     return outs
 
 
-def from_youtube(url: str, name: str | None, n_frames: int) -> None:
+def from_youtube(url: str, name: str | None, n_frames: int, info: dict | None = None) -> str:
+    """URL の動画から 台本原文・画面コマ・編集テンポ を取り込む。保存名を返す。"""
     tmp = Path(tempfile.mkdtemp(prefix="ref_"))
     try:
-        ytdlp = [sys.executable, "-m", "yt_dlp"]
-        info = json.loads(subprocess.run(
-            ytdlp + ["-J", "--no-warnings", url], capture_output=True, text=True, check=True,
-        ).stdout)
+        if info is None:
+            info = json.loads(run_ytdlp(["-J", url]).stdout)
         name = name or safe_name(info.get("title", "reference"))
 
         # 字幕（手動字幕 → 自動字幕の順）
-        subprocess.run(
-            ytdlp + ["--skip-download", "--write-subs", "--write-auto-subs",
-                     "--sub-langs", "ja.*,ja", "--sub-format", "vtt",
-                     "-o", str(tmp / "sub"), url],
-            check=False, capture_output=True,
-        )
+        run_ytdlp(["--skip-download", "--write-subs", "--write-auto-subs",
+                   "--sub-langs", "ja.*,ja", "--sub-format", "vtt",
+                   "-o", str(tmp / "sub"), url], check=False)
         vtts = sorted(tmp.glob("sub*.vtt"))
-        if vtts:
-            text = vtt_to_text(vtts[0].read_text(encoding="utf-8"))
+        vtt_raw = vtts[0].read_text(encoding="utf-8") if vtts else None
+        if vtt_raw:
+            text = vtt_to_text(vtt_raw)
             learning.REF_SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
             out = learning.REF_SCRIPTS_DIR / f"{name}.txt"
             out.write_text(text + "\n", encoding="utf-8")
-            print(f"台本を保存: {out.relative_to(BASE_DIR)}（{len(text)}文字）")
+            print(f"  台本: {len(text)}文字")
         else:
-            print("日本語字幕が見つからなかったので台本は取り込めませんでした（画面だけ取り込みます）")
+            print("  日本語字幕なし（画面と編集テンポだけ取り込みます）")
 
-        # 画面用に低画質で動画を落としてコマを抜く
-        subprocess.run(
-            ytdlp + ["-f", "bv*[height<=1080][ext=mp4]/bv*[height<=1080]/b",
-                     "-o", str(tmp / "video.%(ext)s"), "--no-warnings", url],
-            check=True, capture_output=True,
-        )
-        video = next(tmp.glob("video.*"))
+        # 動画（720p 以下）→ 画面コマ + 編集テンポ
+        run_ytdlp(["-f", "bv*[height<=720][ext=mp4]/bv*[height<=720]/b[height<=720]/b",
+                   "-o", str(tmp / "video.%(ext)s"), url])
+        video = next(p for p in tmp.glob("video.*") if p.suffix != ".part")
         frames = extract_frames(video, name, n_frames)
-        print(f"画面を保存: {len(frames)}枚 → {learning.REF_FRAMES_DIR.relative_to(BASE_DIR)}")
+        metrics = edit_metrics(video, vtt_raw)
+        save_metrics(name, metrics, {
+            "url": url, "title": info.get("title"), "channel": info.get("channel"),
+            "view_count": info.get("view_count"),
+        })
+        print(f"  画面: {len(frames)}枚 / 画面切替 {metrics['screen_changes_per_min']}回/分")
+        return name
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -148,9 +217,15 @@ def from_file(path: Path, name: str | None, n_frames: int) -> None:
 def main():
     ap = argparse.ArgumentParser(description="お手本を取り込む")
     ap.add_argument("source", help="YouTube URL または ファイルパス")
+    ap.add_argument("--metrics", action="store_true",
+                    help="取り込まずに、その動画の編集テンポだけ測って表示（自分の動画の確認用）")
     ap.add_argument("--name", help="保存名")
     ap.add_argument("--frames", type=int, default=6, help="抜き出すコマ数")
     args = ap.parse_args()
+
+    if args.metrics:
+        print(json.dumps(edit_metrics(Path(args.source)), ensure_ascii=False, indent=2))
+        return
 
     if re.match(r"https?://", args.source):
         from_youtube(args.source, args.name, args.frames)

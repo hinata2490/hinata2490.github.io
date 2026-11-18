@@ -113,7 +113,7 @@ python pipeline.py --dry-run
 - [ ] 本番用動画を1本生成してYouTubeにアップ
 
 ## 学習の方針（2026-11 追加・最重要）
-**オーナーが「学習して」「再学習して」「覚えて」「この動画みたいに」と言ったら、`learn` スキルの手順を Claude Code がすべて自分で実行する。オーナーに手作業・コマンド実行を頼まない。**
+**オーナーが「学習して」「再学習して」「巷の動画見て勉強して」と言ったら、`learn` スキルの手順を Claude Code がすべて自分で実行する。オーナーは何も渡さない（URLもファイルも求めない・質問しない）。Claude Code が自分で YouTube の人気ゆっくり系動画を何本も探して見て、台本・画面・編集テンポを学び、動画に反映する。**
 
 この考え方は「学習して」と言われていないときも、台本・テロップ・画面の質を上げる作業すべてのデフォルト:
 - 良さは言語化するとこぼれる。**お手本は原文・原画像のまま保存し、ルールに要約しない**
@@ -121,7 +121,7 @@ python pipeline.py --dry-run
 - 一般論で直さず、必ずお手本と並べて見てから直す（作る → 比べる → 差分を直す のループ）
 - オーナーが会話で指摘した直し（「ここ硬い」等）は、直した結果と一緒に修正ペアとして保存する（`tools/relearn.py --add-pair`）
 
-仕組み: お手本 `learning/references/`（URLから `tools/fetch_reference.py` で自動取り込み）、修正履歴 `learning/corrections/`、台本生成時に自動で読み込まれお手本と比較して書き直し（`steps/script.py`, `steps/learning.py`）
+仕組み: お手本 `learning/references/`（`tools/discover_references.py` が YouTube を検索して自動取り込み。台本原文・画面コマ・編集テンポの測定値）、修正履歴 `learning/corrections/`、台本生成時に自動で読み込まれお手本と比較して書き直し（`steps/script.py`, `steps/learning.py`）
 
 ## 設定ファイル
 - `config.yaml` - チャンネル・パイプライン設定

@@ -26,3 +26,5 @@ learning/references/scripts/*
 learning/references/frames/*
 !learning/references/scripts/.gitkeep
 !learning/references/frames/.gitkeep
+learning/references/metrics/
+learning/references/index.json

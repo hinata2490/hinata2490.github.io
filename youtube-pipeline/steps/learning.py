@@ -40,8 +40,18 @@ def load_reference_scripts(max_items: int = 5) -> list[dict]:
     """お手本台本を原文のまま読み込む（README.md 等は除外）"""
     if not REF_SCRIPTS_DIR.exists():
         return []
+    # オーナーの手直し済み台本 → 再生数の多い巷の動画 の順に優先
+    views = {}
+    index_path = LEARNING_DIR / "references" / "index.json"
+    if index_path.exists():
+        for v in json.loads(index_path.read_text(encoding="utf-8")).get("videos", {}).values():
+            views[v.get("name")] = v.get("views") or 0
+    files = sorted(
+        REF_SCRIPTS_DIR.glob("*.txt"),
+        key=lambda p: (p.stem in views, -views.get(p.stem, 0)),
+    )
     items = []
-    for p in sorted(REF_SCRIPTS_DIR.glob("*.txt"))[:max_items]:
+    for p in files[:max_items]:
         text = p.read_text(encoding="utf-8").strip()
         if text:
             items.append({"name": p.stem, "text": text})
