@@ -13,6 +13,8 @@
   --file output/scripts/xxx.json   特定の台本だけ学習する（省略時はすべて）
   --promote                        直した台本を丸ごと「お手本台本」にも登録する
   --no-lessons                     差分の要約（気づきの言語化）をAIに頼まない
+  --add-pair "直す前" "直した後"    チャットで受けた指摘を修正ペアとして直接保存する
+                                   （Claude Code が「学習して」のときに使う）
 """
 
 import argparse
@@ -134,7 +136,22 @@ def main():
     ap.add_argument("--file", type=str, help="対象の台本 JSON")
     ap.add_argument("--promote", action="store_true", help="直した台本をお手本にも登録")
     ap.add_argument("--no-lessons", action="store_true", help="気づきの要約をしない")
+    ap.add_argument("--add-pair", nargs=2, metavar=("BEFORE", "AFTER"), action="append",
+                    help="修正ペアを直接保存（複数回指定可）")
+    ap.add_argument("--source", default="chat", help="--add-pair の出どころメモ")
     args = ap.parse_args()
+
+    if args.add_pair:
+        learning.CORRECTIONS_DIR.mkdir(parents=True, exist_ok=True)
+        out = learning.CORRECTIONS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{args.source}.json"
+        out.write_text(json.dumps({
+            "source": args.source,
+            "learned_at": datetime.now().isoformat(),
+            "diffs": [{"before": b, "after": a} for b, a in args.add_pair],
+            "lessons": [],
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"修正ペア {len(args.add_pair)} 件を保存: {out.relative_to(BASE_DIR)}")
+        return
 
     targets = [Path(args.file)] if args.file else sorted(SCRIPTS_DIR.glob("*.json"))
     learned_sources = {
